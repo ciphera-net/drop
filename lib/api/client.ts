@@ -3,6 +3,7 @@
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:8081'
 
 /**
  * Base API client with error handling
@@ -11,7 +12,10 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_URL}/api/v1${endpoint}`
+  // * Determine base URL
+  const isAuthRequest = endpoint.startsWith('/auth')
+  const baseUrl = isAuthRequest ? AUTH_URL : API_URL
+  const url = `${baseUrl}/api/v1${endpoint}`
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -32,7 +36,6 @@ async function apiRequest<T>(
   })
 
   if (!response.ok) {
-    // * Handle 401 specifically?
     if (response.status === 401) {
        // Optional: Redirect to login or clear token?
        // localStorage.removeItem('token')
