@@ -36,6 +36,19 @@ export interface DownloadResponse {
   oneTimeDownload?: boolean
 }
 
+export interface FileShare {
+  id: string
+  share_id: string
+  encrypted_filename: string
+  file_size: number
+  mime_type: string
+  expires_at: string
+  download_count: number
+  download_limit?: number
+  one_time_download: boolean
+  created_at: string
+}
+
 export interface ErrorResponse {
   error: string
   message?: string

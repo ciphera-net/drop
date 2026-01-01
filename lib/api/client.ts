@@ -13,15 +13,31 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_URL}/api/v1${endpoint}`
   
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  }
+
+  // Inject Auth Token if available (Client-side only)
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token')
+    if (token) {
+      (headers as any)['Authorization'] = `Bearer ${token}`
+    }
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   })
 
   if (!response.ok) {
+    // * Handle 401 specifically?
+    if (response.status === 401) {
+       // Optional: Redirect to login or clear token?
+       // localStorage.removeItem('token')
+    }
+
     const error = await response.json().catch(() => ({
       error: 'Unknown error',
       message: `HTTP ${response.status}: ${response.statusText}`,
