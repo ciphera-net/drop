@@ -4,11 +4,11 @@ Drop is a privacy-first file sharing application that encrypts files client-side
 
 ## Features
 
-- 🔒 **End-to-End Encryption**: Files encrypted client-side using AES-256-GCM
-- 🚫 **Zero-Knowledge**: We cannot see what you upload
-- 🔗 **Secure Sharing**: Share files via secure links with optional password protection
-- ⏱️ **Configurable Expiration**: Set expiration times for shared files
-- 📱 **Responsive Design**: Works on all devices
+- **End-to-End Encryption**: Files are encrypted client-side using AES-256-GCM.
+- **Zero-Knowledge**: The server has no visibility into the file contents.
+- **Secure Sharing**: Share files via secure links with optional password protection.
+- **Configurable Expiration**: Set expiration times for shared files.
+- **Responsive Design**: Optimized for desktop and mobile devices.
 
 ## Technology Stack
 
@@ -27,44 +27,51 @@ Drop is a privacy-first file sharing application that encrypts files client-side
 
 ### Installation
 
-```bash
-# Install dependencies
-npm install
+1.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-# Copy environment variables
-cp .env.example .env.local
+2.  **Environment Setup**:
+    Copy the example environment file:
+    ```bash
+    cp .env.example .env.local
+    ```
+    
+    Edit `.env.local` to set your backend API URL:
+    ```bash
+    NEXT_PUBLIC_API_URL=http://localhost:8080
+    ```
 
-# Edit .env.local and set your backend API URL
-# NEXT_PUBLIC_API_URL=http://localhost:8080
+3.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
 
-# Run development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+    The application will be available at `http://localhost:3000`.
 
 ## Project Structure
 
-```
+```text
 drop-frontend/
 ├── app/              # Next.js App Router pages
 ├── components/       # React components
-├── lib/             # Utilities, encryption, API client
-├── styles/          # Global styles and Tailwind
-└── public/          # Static assets
+├── lib/              # Utilities, encryption, API client
+├── styles/           # Global styles and Tailwind
+└── public/           # Static assets
 ```
 
-## Development
+## Development Commands
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Type check without building
+- `npm run dev`: Start development server.
+- `npm run build`: Build for production.
+- `npm run lint`: Run ESLint.
+- `npm run type-check`: Perform TypeScript type checking.
 
 ## Security
 
-All encryption happens client-side. See `docs/ENCRYPTION.md` for details.
+All encryption is performed client-side using the Web Crypto API. No plain-text file data is ever transmitted to the server. Refer to `docs/ENCRYPTION.md` for detailed specifications.
 
 ## License
 
-AGPL-3.0 or similar (to be determined)
+AGPL-3.0
