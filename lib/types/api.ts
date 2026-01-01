@@ -29,7 +29,7 @@ export interface DownloadRequest {
 export interface DownloadResponse {
   encryptedData: ArrayBuffer
   filename: string // Encrypted filename
-  iv: string // Base64 encoded
+  iv: ArrayBuffer // Base64 encoded -> ArrayBuffer
   expiresAt: string // ISO 8601 timestamp
   downloadCount: number
   downloadLimit?: number

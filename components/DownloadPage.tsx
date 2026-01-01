@@ -25,6 +25,7 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
         handleDownload(hash)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleDownload = async (keyFromHash?: string) => {
