@@ -35,7 +35,7 @@ export async function importEncryptionKey(
 ): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     'raw',
-    rawKey,
+    rawKey as BufferSource,
     {
       name: 'AES-GCM',
       length: 256,
