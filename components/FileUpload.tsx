@@ -81,7 +81,9 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       }
 
       // * Upload to backend
-      const response = await uploadFile(uploadRequest)
+      const response = await uploadFile(uploadRequest, (progress) => {
+        setProgress(progress)
+      })
 
       // * Generate share URL with encryption key
       const encodedKey = encodeKeyForSharing(key.raw)
