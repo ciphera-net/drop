@@ -5,9 +5,10 @@ import { useState } from 'react'
 interface ShareLinkProps {
   shareUrl: string
   onReset: () => void
+  title?: string
 }
 
-export default function ShareLink({ shareUrl, onReset }: ShareLinkProps) {
+export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
@@ -29,9 +30,9 @@ export default function ShareLink({ shareUrl, onReset }: ShareLinkProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-neutral-900">Share Link Ready</h2>
+          <h2 className="text-xl font-bold text-neutral-900">{title || 'Share Link Ready'}</h2>
           <p className="text-sm text-neutral-500 mt-1 max-w-sm">
-            Your file has been encrypted and secured. Share this link with recipients.
+            {title ? 'Your request link has been created.' : 'Your file has been encrypted and secured. Share this link with recipients.'}
           </p>
         </div>
         
@@ -71,7 +72,7 @@ export default function ShareLink({ shareUrl, onReset }: ShareLinkProps) {
         onClick={onReset}
         className="w-full btn-secondary"
       >
-        Upload Another File
+        {title ? 'Create Another Request' : 'Upload Another File'}
       </button>
     </div>
   )
