@@ -7,7 +7,7 @@ import {
   generateIV,
   importEncryptionKey,
 } from './key-management'
-import type { EncryptionResult, DecryptionResult } from '../types/encryption'
+import type { EncryptionResult, DecryptionResult, EncryptionKey } from '../types/encryption'
 
 /**
  * Encrypt a file using AES-256-GCM
