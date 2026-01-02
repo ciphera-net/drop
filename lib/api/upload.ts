@@ -24,7 +24,7 @@ export async function uploadFile(
     iv: ivBase64,
     fileSize: request.file.size,
     mimeType: request.file.type,
-    expirationDays: request.expirationDays || 7,
+    expirationMinutes: request.expirationMinutes || 10080, // Default 7 days
     password: request.password,
     downloadLimit: request.downloadLimit,
     oneTimeDownload: request.oneTimeDownload,

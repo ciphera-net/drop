@@ -16,10 +16,22 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [expirationDays, setExpirationDays] = useState(7)
+  const [expirationMinutes, setExpirationMinutes] = useState(10080) // Default 7 days
   const [password, setPassword] = useState('')
   const [downloadLimit, setDownloadLimit] = useState<number | undefined>()
   const [oneTimeDownload, setOneTimeDownload] = useState(false)
+
+  const EXPIRATION_OPTIONS = [
+    { label: '1 Hour', value: 60 },
+    { label: '1 Day', value: 1440 },
+    { label: '7 Days', value: 10080 },
+  ]
+
+  const DOWNLOAD_LIMITS = [
+    { label: '10', value: 10 },
+    { label: '50', value: 50 },
+    { label: '∞', value: undefined },
+  ]
 
   const handleFileSelect = useCallback((selectedFiles: FileList | null) => {
     if (!selectedFiles) return
@@ -46,6 +58,15 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       setFiles((prev) => [...prev, ...validFiles])
     }
   }, [])
+
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (!+bytes) return '0 Bytes'
+    const k = 1024
+    const dm = decimals < 0 ? 0 : decimals
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+  }
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -97,7 +118,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         encryptedData: encrypted,
         encryptedFilename,
         iv,
-        expirationDays,
+        expirationMinutes,
         password: password || undefined,
         downloadLimit: downloadLimit || undefined,
         oneTimeDownload,
@@ -133,7 +154,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       setUploading(false)
       setProgress(0)
     }
-  }, [files, expirationDays, password, downloadLimit, oneTimeDownload, onUploadComplete])
+  }, [files, expirationMinutes, password, downloadLimit, oneTimeDownload, onUploadComplete])
 
   return (
     <div className="w-full mx-auto space-y-6">
@@ -183,20 +204,40 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
 
       {/* * Selected files */}
       {files.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-medium">Selected files:</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-neutral-900">Selected files</h3>
+            <span className="text-xs text-neutral-500">{files.length} file{files.length !== 1 ? 's' : ''}</span>
+          </div>
           {files.map((file, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-3 bg-neutral-100 rounded-lg"
+              className="relative group flex items-center p-4 bg-white border border-neutral-200 rounded-xl shadow-sm hover:border-brand-orange/30 hover:shadow-md transition-all duration-200"
             >
-              <span className="text-sm truncate flex-1">{file.name}</span>
+              <div className="flex-shrink-0 w-10 h-10 bg-brand-orange/10 rounded-lg flex items-center justify-center mr-4 text-brand-orange">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              
+              <div className="flex-1 min-w-0 mr-4">
+                <p className="text-sm font-medium text-neutral-900 truncate" title={file.name}>
+                  {file.name}
+                </p>
+                <p className="text-xs text-neutral-500">
+                  {formatBytes(file.size)}
+                </p>
+              </div>
+
               <button
                 onClick={() => removeFile(index)}
-                className="ml-2 text-red-500 hover:text-red-700 text-sm"
+                className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
                 disabled={uploading}
+                title="Remove file"
               >
-                Remove
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           ))}
@@ -205,67 +246,96 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
 
       {/* * Upload options */}
       {files.length > 0 && (
-        <div className="space-y-4 p-4 bg-neutral-50 rounded-lg">
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Expiration (days)
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="30"
-              value={expirationDays}
-              onChange={(e) => setExpirationDays(parseInt(e.target.value) || 7)}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white"
-              disabled={uploading}
-            />
+        <div className="space-y-5 pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Expiration */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-neutral-700">
+                Expiration
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {EXPIRATION_OPTIONS.map((option) => (
+                  <button
+                    key={option.label}
+                    onClick={() => setExpirationMinutes(option.value)}
+                    disabled={uploading}
+                    className={`px-3 py-2 text-sm font-medium rounded-xl border transition-all duration-200 ${
+                      expirationMinutes === option.value
+                        ? 'bg-brand-orange text-white border-brand-orange shadow-md shadow-brand-orange/20'
+                        : 'bg-white text-neutral-600 border-neutral-200 hover:border-brand-orange/50 hover:bg-brand-orange/5'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Download Limit */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-neutral-700">
+                Download limit
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {DOWNLOAD_LIMITS.map((option) => (
+                  <button
+                    key={option.label}
+                    onClick={() => setDownloadLimit(option.value)}
+                    disabled={uploading}
+                    className={`px-3 py-2 text-sm font-medium rounded-xl border transition-all duration-200 ${
+                      downloadLimit === option.value
+                        ? 'bg-brand-orange text-white border-brand-orange shadow-md shadow-brand-orange/20'
+                        : 'bg-white text-neutral-600 border-neutral-200 hover:border-brand-orange/50 hover:bg-brand-orange/5'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Password (optional)
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Protect with password"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white"
+          {/* Burn after download (Switch) */}
+          <div className="flex items-center justify-between p-4 border border-neutral-200 rounded-xl bg-white">
+            <div className="space-y-0.5">
+              <span className="block text-sm font-medium text-neutral-900">Burn after download</span>
+              <span className="block text-xs text-neutral-500">File will be deleted after first download</span>
+            </div>
+            <button
+              onClick={() => setOneTimeDownload(!oneTimeDownload)}
               disabled={uploading}
-            />
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                oneTimeDownload ? 'bg-brand-orange' : 'bg-neutral-200'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  oneTimeDownload ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
 
+          {/* Password */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Download limit (optional)
+            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+              Password protection
             </label>
-            <input
-              type="number"
-              min="1"
-              value={downloadLimit || ''}
-              onChange={(e) =>
-                setDownloadLimit(
-                  e.target.value ? parseInt(e.target.value) : undefined
-                )
-              }
-              placeholder="Unlimited"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white"
-              disabled={uploading}
-            />
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="one-time"
-              checked={oneTimeDownload}
-              onChange={(e) => setOneTimeDownload(e.target.checked)}
-              className="mr-2"
-              disabled={uploading}
-            />
-            <label htmlFor="one-time" className="text-sm">
-              One-time download
-            </label>
+            <div className="relative">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Optional password"
+                className="w-full pl-10 pr-3 py-2.5 border border-neutral-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all outline-none"
+                disabled={uploading}
+              />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       )}

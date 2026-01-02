@@ -7,7 +7,7 @@ export interface UploadRequest {
   encryptedData: ArrayBuffer
   encryptedFilename: string
   iv: Uint8Array
-  expirationDays?: number
+  expirationMinutes?: number
   password?: string // Optional password for share link
   downloadLimit?: number // Optional download limit
   oneTimeDownload?: boolean // Optional one-time download flag
