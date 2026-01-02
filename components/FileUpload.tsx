@@ -16,10 +16,10 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [expirationMinutes, setExpirationMinutes] = useState(10080) // Default 7 days
+  const [expirationMinutes, setExpirationMinutes] = useState(60) // Default 1 Hour
   const [password, setPassword] = useState('')
   const [downloadLimit, setDownloadLimit] = useState<number | undefined>()
-  const [oneTimeDownload, setOneTimeDownload] = useState(false)
+  const [oneTimeDownload, setOneTimeDownload] = useState(true)
 
   const EXPIRATION_OPTIONS = [
     { label: '1 Hour', value: 60 },
@@ -272,7 +272,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
             </div>
 
             {/* Download Limit */}
-            <div className="space-y-2">
+            <div className={`space-y-2 transition-opacity duration-200 ${oneTimeDownload ? 'opacity-50 pointer-events-none' : ''}`}>
               <label className="block text-sm font-medium text-neutral-700">
                 Download limit
               </label>
@@ -281,14 +281,14 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                   <button
                     key={option.label}
                     onClick={() => setDownloadLimit(option.value)}
-                    disabled={uploading}
+                    disabled={uploading || oneTimeDownload}
                     className={`px-3 py-2 text-sm font-medium rounded-xl border transition-all duration-200 ${
                       downloadLimit === option.value
                         ? 'bg-brand-orange text-white border-brand-orange shadow-md shadow-brand-orange/20'
                         : 'bg-white text-neutral-600 border-neutral-200 hover:border-brand-orange/50 hover:bg-brand-orange/5'
                     }`}
                   >
-                    {option.label}
+                    {option.label === '∞' ? <span className="text-3xl leading-none -mt-1 block">∞</span> : option.label}
                   </button>
                 ))}
               </div>
