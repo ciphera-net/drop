@@ -79,7 +79,13 @@ The backend sets the following security headers:
   - Download count
 - No IP logging
 - No tracking cookies
-- No analytics
+  - No analytics
+
+### Data Retention & Cleanup
+
+- **Automatic Purging**: A background worker runs every hour to identify and permanently delete expired files from both the database and physical storage.
+- **Immediate Revocation**: Users can manually delete files before expiration, which triggers immediate removal from storage.
+- **One-Time Downloads**: Files marked for "One-Time Download" are atomically deleted immediately after the first successful download.
 
 ### GDPR Compliance
 
