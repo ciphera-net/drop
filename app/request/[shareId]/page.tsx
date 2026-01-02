@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import FileUpload from '../../components/FileUpload'
-import apiRequest from '../../lib/api/client'
-import { FileRequest } from '../../lib/types/api'
-import { decodeKeyFromSharing } from '../../lib/crypto/key-management'
+import FileUpload from '../../../components/FileUpload'
+import apiRequest from '../../../lib/api/client'
+import { FileRequest } from '../../../lib/types/api'
+import { decodeKeyFromSharing } from '../../../lib/crypto/key-management'
 import Link from 'next/link'
 
 export default function RequestPage() {
