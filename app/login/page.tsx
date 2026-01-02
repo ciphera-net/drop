@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import apiRequest from '@/lib/api/client'
 import { useAuth } from '@/lib/auth/context'
+import { deriveAuthKey } from '@/lib/crypto/password'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -20,9 +21,12 @@ export default function LoginPage() {
     setError(null)
 
     try {
+      // * Derive auth key from password so raw password never leaves client
+      const derivedPassword = await deriveAuthKey(password, email)
+
       const response = await apiRequest<{ token: string; user: { id: string; email: string } }>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password: derivedPassword }),
       })
 
       login(response.token, response.user)

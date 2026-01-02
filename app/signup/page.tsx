@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import apiRequest from '@/lib/api/client'
+import { deriveAuthKey } from '@/lib/crypto/password'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -18,9 +19,12 @@ export default function SignupPage() {
     setError(null)
 
     try {
+      // * Derive auth key from password so raw password never leaves client
+      const derivedPassword = await deriveAuthKey(password, email)
+      
       await apiRequest('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password: derivedPassword }),
       })
 
       router.push('/login?message=Account created successfully')

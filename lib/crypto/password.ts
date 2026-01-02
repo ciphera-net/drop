@@ -38,6 +38,44 @@ export async function deriveKeyFromPassword(
 }
 
 /**
+ * Derive an authentication key from password and email (used as salt).
+ * This ensures the raw password never leaves the client.
+ */
+export async function deriveAuthKey(
+  password: string,
+  email: string
+): Promise<string> {
+  const encoder = new TextEncoder()
+  
+  // * Import password as key material
+  const passwordKey = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  )
+
+  // * Derive bits using PBKDF2
+  // * We use the email as a deterministic salt for the auth key
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: encoder.encode(email),
+      iterations: 100000,
+      hash: 'SHA-256',
+    },
+    passwordKey,
+    256 // 256 bits = 32 bytes
+  )
+
+  // * Convert to hex string
+  return Array.from(new Uint8Array(derivedBits))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+/**
  * Generate a random salt for PBKDF2
  */
 export function generateSalt(): Uint8Array {
