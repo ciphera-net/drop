@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { downloadFile } from '../lib/api/download'
 import { decryptFile, decryptString, base64ToArrayBuffer } from '../lib/crypto/encryption'
 import { decodeKeyFromSharing, importEncryptionKey } from '../lib/crypto/key-management'
@@ -15,18 +15,6 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filename, setFilename] = useState<string | null>(null)
-
-  useEffect(() => {
-    // * If encryption key is in URL hash, extract it
-    if (typeof window !== 'undefined' && window.location.hash) {
-      const hash = window.location.hash.substring(1) // Remove #
-      if (hash && !encryptionKey) {
-        // * Key is in URL hash
-        handleDownload(hash)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const handleDownload = async (keyFromHash?: string) => {
     const key = keyFromHash || encryptionKey
