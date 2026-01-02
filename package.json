@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "framer-motion": "^12.23.26",
     "jszip": "^3.10.1",
     "next": "^16.1.1",
     "react": "^19.2.3",

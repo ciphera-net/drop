@@ -1,22 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
 import FileUpload from '../components/FileUpload'
+import FileRequest from '../components/FileRequest'
 import ShareLink from '../components/ShareLink'
+import { useAuth } from '@/lib/auth/context'
 
 export default function HomePage() {
+  const { user } = useAuth()
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   
+  // * 'send' | 'receive' mode state
+  const [mode, setMode] = useState<'send' | 'receive'>('send')
+
   const [text, setText] = useState('Share')
   const [isDeleting, setIsDeleting] = useState(false)
   const [wordIndex, setWordIndex] = useState(0)
 
   // Typewriter effect logic
-  useState(() => {
-    // This is just to ensure client-side hydration doesn't mismatch if we used random start
-    // but here we are deterministic.
-  })
-
   useEffect(() => {
     const words = ['Share', 'Receive', 'Encrypt']
     const currentWord = words[wordIndex % words.length]
@@ -28,23 +31,19 @@ export default function HomePage() {
 
     if (isDeleting) {
       if (text === '') {
-        // Finished deleting, move to next word
         setIsDeleting(false)
         setWordIndex((prev) => prev + 1)
       } else {
-        // Deleting characters
         timer = setTimeout(() => {
           setText(text.slice(0, -1))
         }, deleteSpeed)
       }
     } else {
       if (text === currentWord) {
-        // Finished typing, pause before deleting
         timer = setTimeout(() => {
           setIsDeleting(true)
         }, pauseTime)
       } else {
-        // Typing characters
         timer = setTimeout(() => {
           setText(currentWord.slice(0, text.length + 1))
         }, typeSpeed)
@@ -67,16 +66,85 @@ export default function HomePage() {
             <span className="text-brand-orange">to {text}</span>
             <span className="animate-pulse text-brand-orange">|</span>
           </h1>
-          <p className="text-lg md:text-xl text-neutral-600 max-w-md mx-auto leading-relaxed">
-            Share files securely with a single link.
-          </p>
         </div>
 
-        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl shadow-brand-orange/5 border border-neutral-100/50 backdrop-blur-sm max-w-md mx-auto">
+        {/* * Magnetic Toggle Buttons */}
+        <div className="flex justify-center mb-6">
+          <div className="bg-neutral-100 p-1.5 rounded-full inline-flex relative border border-neutral-200 shadow-sm">
+            {['send', 'receive'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setMode(tab as 'send' | 'receive')
+                  setShareUrl(null)
+                }}
+                className={`relative px-6 py-2 rounded-full text-sm font-bold transition-colors z-10 capitalize ${
+                  mode === tab ? 'text-white' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                {tab}
+                {mode === tab && (
+                  <motion.div
+                    layoutId="active-pill"
+                    className="absolute inset-0 bg-brand-orange rounded-full shadow-md shadow-brand-orange/25"
+                    style={{ zIndex: -1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl shadow-brand-orange/5 border border-neutral-100/50 backdrop-blur-sm max-w-md w-full mx-auto aspect-square flex flex-col justify-center transition-all duration-300">
           {shareUrl ? (
-            <ShareLink shareUrl={shareUrl} onReset={() => setShareUrl(null)} />
+            <ShareLink 
+              shareUrl={shareUrl} 
+              onReset={() => setShareUrl(null)}
+              title={mode === 'receive' ? 'Your Request Link' : undefined}
+            />
           ) : (
-            <FileUpload onUploadComplete={setShareUrl} />
+            mode === 'send' ? (
+              <FileUpload onUploadComplete={setShareUrl} />
+            ) : (
+              // * Receive Mode
+              <div className="h-full w-full">
+                {user ? (
+                  // Authenticated View
+                  <FileRequest onRequestCreated={setShareUrl} />
+                ) : (
+                  // Unauthenticated View
+                  <div className="py-8 text-center flex flex-col items-center justify-center h-full">
+                    <div className="w-20 h-20 bg-brand-orange/5 rounded-full flex items-center justify-center mb-6 shadow-sm border border-brand-orange/10">
+                      <svg className="w-10 h-10 text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold text-neutral-900 mb-3">Authentication Required</h3>
+                    
+                    <p className="text-neutral-500 mb-8 max-w-xs leading-relaxed">
+                      To ensure security, you must be signed in to request encrypted files from others.
+                    </p>
+                    
+                    <div className="w-full max-w-xs space-y-3">
+                      <Link 
+                        href="/login" 
+                        className="btn-primary block w-full text-center"
+                      >
+                        Log In
+                      </Link>
+                      <Link 
+                        href="/signup" 
+                        className="btn-secondary block w-full text-center"
+                      >
+                        Create Account
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
           )}
         </div>
       </div>

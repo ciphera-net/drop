@@ -3,16 +3,18 @@
 import { useState, useCallback, useRef } from 'react'
 import JSZip from 'jszip'
 import { encryptFile, encryptString, arrayBufferToBase64 } from '../lib/crypto/encryption'
-import { encodeKeyForSharing } from '../lib/crypto/key-management'
-import { uploadFile } from '../lib/api/upload'
+import { encodeKeyForSharing, importEncryptionKey } from '../lib/crypto/key-management'
+import { uploadFile, uploadToRequest } from '../lib/api/upload'
 import type { UploadRequest } from '../lib/types/api'
 import { MAX_FILE_SIZE } from '../lib/constants'
 
 interface FileUploadProps {
   onUploadComplete?: (shareUrl: string) => void
+  requestId?: string
+  requestKey?: Uint8Array
 }
 
-export default function FileUpload({ onUploadComplete }: FileUploadProps) {
+export default function FileUpload({ onUploadComplete, requestId, requestKey }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -80,6 +82,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    // Add drag highlight style
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -106,6 +109,8 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
     try {
       let fileToUpload: File
 
+      // * Check for zip creation
+      // * If uploading to request, we might want to zip as well? Yes, consistent behavior.
       if (files.length > 1) {
         // * Create zip for multiple files
         const zip = new JSZip()
@@ -124,8 +129,16 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         throw new Error(`File ${fileToUpload.name} is too large. Max size is 5GB.`)
       }
 
+      // * Prepare Encryption Key
+      let encryptionKey
+      if (requestKey) {
+        // * Import provided key (Uint8Array) to CryptoKey
+        const cryptoKey = await importEncryptionKey(requestKey)
+        encryptionKey = { key: cryptoKey, raw: requestKey }
+      }
+      
       // * Encrypt file
-      const { encrypted, iv, key } = await encryptFile(fileToUpload)
+      const { encrypted, iv, key } = await encryptFile(fileToUpload, encryptionKey)
 
       // * Encrypt filename
       const encryptedFilenameBuffer = await encryptString(
@@ -141,15 +154,16 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         encryptedData: encrypted,
         encryptedFilename,
         iv,
-        expirationMinutes,
-        password: password || undefined,
-        downloadLimit: downloadLimit || undefined,
-        oneTimeDownload,
+        expirationMinutes: !requestId ? expirationMinutes : undefined,
+        password: !requestId ? (password || undefined) : undefined,
+        downloadLimit: !requestId ? (downloadLimit || undefined) : undefined,
+        oneTimeDownload: !requestId ? oneTimeDownload : undefined,
       }
 
       // * Upload to backend
       lastUploadRef.current = { loaded: 0, time: Date.now() }
-      const response = await uploadFile(uploadRequest, (progress, loaded, total) => {
+      
+      const onProgressCallback = (progress: number, loaded: number, total: number) => {
         const now = Date.now()
         const timeDiff = now - lastUploadRef.current.time
         
@@ -163,37 +177,48 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         }
         
         setProgress(progress)
-      })
+      }
 
-      // * Generate share URL with encryption key
-      const encodedKey = encodeKeyForSharing(key.raw)
-      const shareUrl = `${window.location.origin}/${response.shareId}#${encodedKey}`
+      let shareUrl
+      if (requestId) {
+        // * Upload to Request
+        await uploadToRequest(requestId, uploadRequest, onProgressCallback)
+        shareUrl = 'sent' // Special flag or just indicate success
+      } else {
+        // * Normal Upload
+        const response = await uploadFile(uploadRequest, onProgressCallback)
+        // * Generate share URL with encryption key
+        const encodedKey = encodeKeyForSharing(key.raw)
+        shareUrl = `${window.location.origin}/${response.shareId}#${encodedKey}`
+      }
 
       setProgress(100)
 
       if (onUploadComplete) {
         onUploadComplete(shareUrl)
-      } else {
-        // * Copy to clipboard
+      } else if (!requestId) {
+        // * Copy to clipboard for normal shares
         await navigator.clipboard.writeText(shareUrl)
         alert('Share link copied to clipboard!')
       }
 
       // * Reset form
       setFiles([])
-      setPassword('')
-      setDownloadLimit(undefined)
-      setOneTimeDownload(false)
+      if (!requestId) {
+        setPassword('')
+        setDownloadLimit(undefined)
+        setOneTimeDownload(false)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
       setUploading(false)
       setProgress(0)
     }
-  }, [files, expirationMinutes, password, downloadLimit, oneTimeDownload, onUploadComplete])
+  }, [files, expirationMinutes, password, downloadLimit, oneTimeDownload, onUploadComplete, requestId, requestKey])
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-6">
+    <div className={`w-full max-w-md mx-auto ${files.length > 0 ? 'space-y-6' : ''}`}>
       <input
         ref={fileInputRef}
         type="file"
@@ -225,7 +250,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
               </div>
               <div className="space-y-2">
                 <p className="text-xl font-semibold text-neutral-700 group-hover:text-brand-orange transition-colors">
-                  Click to upload or drag and drop
+                  {requestId ? 'Upload Requested Files' : 'Click to upload or drag and drop'}
                 </p>
                 <p className="text-sm text-neutral-500 max-w-xs mx-auto">
                   Files are encrypted client-side before being uploaded. Maximum file size 5GB.
@@ -297,8 +322,8 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         </div>
       )}
 
-      {/* * Upload options */}
-      {files.length > 0 && (
+      {/* * Upload options (Only show if NOT a request) */}
+      {!requestId && files.length > 0 && (
         <div className="space-y-5 pt-2">
           <div className="grid grid-cols-1 gap-6">
             {/* Expiration */}
@@ -448,7 +473,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
             disabled={uploading}
             className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Upload & Generate Link
+            {requestId ? 'Securely Upload File' : 'Upload & Generate Link'}
           </button>
         )
       )}

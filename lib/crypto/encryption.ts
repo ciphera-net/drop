@@ -13,10 +13,11 @@ import type { EncryptionResult, DecryptionResult } from '../types/encryption'
  * Encrypt a file using AES-256-GCM
  */
 export async function encryptFile(
-  file: File
+  file: File,
+  existingKey?: EncryptionKey
 ): Promise<EncryptionResult> {
   // * Generate encryption key and IV
-  const key = await generateEncryptionKey()
+  const key = existingKey || await generateEncryptionKey()
   const iv = generateIV()
 
   // * Read file as ArrayBuffer

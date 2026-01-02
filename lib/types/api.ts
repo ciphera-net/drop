@@ -49,6 +49,29 @@ export interface FileShare {
   created_at: string
 }
 
+export interface CreateRequestParams {
+  title: string
+  description?: string
+  expirationMinutes?: number
+  maxUploads?: number
+}
+
+export interface CreateRequestResponse {
+  requestId: string
+  requestUrl: string
+  expiresAt: string
+}
+
+export interface FileRequest {
+  id: string
+  request_id: string
+  title?: string
+  description?: string
+  expires_at: string
+  max_uploads?: number
+  created_at: string
+}
+
 export interface ErrorResponse {
   error: string
   message?: string
