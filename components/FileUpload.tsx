@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import JSZip from 'jszip'
 import { encryptFile, encryptString, arrayBufferToBase64 } from '../lib/crypto/encryption'
 import { encodeKeyForSharing } from '../lib/crypto/key-management'
 import { uploadFile } from '../lib/api/upload'
@@ -97,19 +98,32 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
     setUploadSpeed('')
 
     try {
-      // * For now, upload the first file (multi-file support will be added later)
-      const file = files[0]
+      let fileToUpload: File
 
-      if (file.size > MAX_FILE_SIZE) {
-        throw new Error(`File ${file.name} is too large. Max size is 5GB.`)
+      if (files.length > 1) {
+        // * Create zip for multiple files
+        const zip = new JSZip()
+        files.forEach((file) => {
+          zip.file(file.name, file)
+        })
+        
+        // * Update progress to indicate compression
+        const content = await zip.generateAsync({ type: 'blob' })
+        fileToUpload = new File([content], 'archive.zip', { type: 'application/zip' })
+      } else {
+        fileToUpload = files[0]
+      }
+
+      if (fileToUpload.size > MAX_FILE_SIZE) {
+        throw new Error(`File ${fileToUpload.name} is too large. Max size is 5GB.`)
       }
 
       // * Encrypt file
-      const { encrypted, iv, key } = await encryptFile(file)
+      const { encrypted, iv, key } = await encryptFile(fileToUpload)
 
       // * Encrypt filename
       const encryptedFilenameBuffer = await encryptString(
-        file.name,
+        fileToUpload.name,
         key.key,
         iv
       )
@@ -117,7 +131,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
 
       // * Prepare upload request
       const uploadRequest: UploadRequest = {
-        file,
+        file: fileToUpload,
         encryptedData: encrypted,
         encryptedFilename,
         iv,
