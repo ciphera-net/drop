@@ -12,7 +12,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
  */
 export async function uploadFile(
   request: UploadRequest,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number, loaded: number, total: number) => void
 ): Promise<UploadResponse> {
   // * Convert encrypted data to base64 for JSON transmission
   const encryptedDataBase64 = arrayBufferToBase64(request.encryptedData)
@@ -39,7 +39,7 @@ export async function uploadFile(
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
           const percentComplete = (event.loaded / event.total) * 100
-          onProgress(Math.round(percentComplete))
+          onProgress(Math.round(percentComplete), event.loaded, event.total)
         }
       }
     }

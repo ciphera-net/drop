@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { encryptFile, encryptString, arrayBufferToBase64 } from '../lib/crypto/encryption'
 import { encodeKeyForSharing } from '../lib/crypto/key-management'
 import { uploadFile } from '../lib/api/upload'
@@ -15,6 +15,8 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [uploadSpeed, setUploadSpeed] = useState<string>('')
+  const lastUploadRef = useRef<{ loaded: number; time: number }>({ loaded: 0, time: 0 })
   const [error, setError] = useState<string | null>(null)
   const [expirationMinutes, setExpirationMinutes] = useState(60) // Default 1 Hour
   const [password, setPassword] = useState('')
@@ -92,6 +94,7 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
     setUploading(true)
     setError(null)
     setProgress(0)
+    setUploadSpeed('')
 
     try {
       // * For now, upload the first file (multi-file support will be added later)
@@ -125,7 +128,20 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
       }
 
       // * Upload to backend
-      const response = await uploadFile(uploadRequest, (progress) => {
+      lastUploadRef.current = { loaded: 0, time: Date.now() }
+      const response = await uploadFile(uploadRequest, (progress, loaded, total) => {
+        const now = Date.now()
+        const timeDiff = now - lastUploadRef.current.time
+        
+        // Update speed every 500ms
+        if (timeDiff > 500) {
+          const loadedDiff = loaded - lastUploadRef.current.loaded
+          const speedBytesPerSecond = (loadedDiff / timeDiff) * 1000
+          setUploadSpeed(formatBytes(speedBytesPerSecond) + '/s')
+          
+          lastUploadRef.current = { loaded, time: now }
+        }
+        
         setProgress(progress)
       })
 
@@ -362,15 +378,42 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         </div>
       )}
 
-      {/* * Upload button */}
+      {/* * Upload button or Progress */}
       {files.length > 0 && (
-        <button
-          onClick={handleUpload}
-          disabled={uploading}
-          className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {uploading ? `Uploading... ${progress}%` : 'Upload & Generate Link'}
-        </button>
+        uploading ? (
+          <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm space-y-3">
+            <div className="flex justify-between items-center text-sm font-medium text-neutral-700">
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-brand-orange animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Uploading...
+              </span>
+              <span>{progress}%</span>
+            </div>
+            
+            <div className="w-full bg-neutral-100 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-brand-orange h-2 rounded-full transition-all duration-300 ease-out" 
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            
+            <div className="flex justify-between text-xs text-neutral-500">
+              <span>Encrypting & Uploading</span>
+              <span>{uploadSpeed}</span>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={handleUpload}
+            disabled={uploading}
+            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Upload & Generate Link
+          </button>
+        )
       )}
 
       {/* * Error message */}
