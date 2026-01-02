@@ -1,16 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, use } from 'react'
 import DownloadPageComponent from '@/components/DownloadPage'
 
 interface DownloadPageProps {
-  params: {
+  params: Promise<{
     shareId: string
-  }
+  }>
 }
 
 export default function DownloadPage({ params }: DownloadPageProps) {
-  const { shareId } = params
+  const { shareId } = use(params)
   const [encryptionKey, setEncryptionKey] = useState<string | undefined>()
 
   useEffect(() => {
