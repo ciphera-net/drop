@@ -55,13 +55,7 @@ export default function HomePage() {
   }, [text, isDeleting, wordIndex])
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 py-12 relative overflow-hidden bg-neutral-50/50">
-      {/* Background decoration */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-brand-orange/5 to-transparent opacity-50" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-      </div>
-
+    <main className="min-h-screen flex items-center justify-center p-4 py-12 relative overflow-hidden bg-white">
       <div className="max-w-2xl w-full space-y-8 relative z-10">
         <div className="text-center space-y-4">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-neutral-900">
