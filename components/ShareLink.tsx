@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import CipherReveal from './CipherReveal'
 
 interface ShareLinkProps {
   shareUrl: string
@@ -10,6 +11,7 @@ interface ShareLinkProps {
 
 export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) {
   const [copied, setCopied] = useState(false)
+  const [isRevealed, setIsRevealed] = useState(false)
 
   const handleCopy = async () => {
     try {
@@ -37,12 +39,24 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
         </div>
         
         <div className="flex items-center gap-2 mb-6">
-          <input
-            type="text"
-            value={shareUrl}
-            readOnly
-            className="flex-1 px-4 py-3 border border-neutral-200 rounded-xl bg-white text-sm font-mono text-neutral-600 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all"
-          />
+          {!isRevealed ? (
+            <div className="flex-1 px-4 py-3 border border-neutral-200 rounded-xl bg-white text-sm font-mono text-neutral-600 overflow-hidden whitespace-nowrap flex items-center h-[46px]">
+              <CipherReveal 
+                text={shareUrl} 
+                onComplete={() => setIsRevealed(true)}
+                speed={30} // Fast reveal for long URLs
+                className="block"
+              />
+            </div>
+          ) : (
+            <input
+              type="text"
+              value={shareUrl}
+              readOnly
+              className="flex-1 px-4 py-3 border border-neutral-200 rounded-xl bg-white text-sm font-mono text-neutral-600 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all h-[46px]"
+              autoFocus
+            />
+          )}
           <button
             onClick={handleCopy}
             className="btn-secondary whitespace-nowrap !px-6 !py-3 h-[46px] flex items-center"
