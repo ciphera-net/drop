@@ -54,8 +54,40 @@ Authentication is handled by the `Ciphera Auth` service. It uses JSON Web Tokens
 All backend endpoints (except Health) require the JWT token in the `Authorization` header:
 `Authorization: Bearer <token>`
 
-### Upload File
+### User Files
 
+#### List User Files
+List all files owned by the authenticated user (uploaded by them or sent to their requests).
+
+**Endpoint**: `GET /api/v1/user/files`
+
+**Response**:
+```json
+{
+  "files": [
+    {
+      "id": "uuid",
+      "share_id": "share-id",
+      "created_at": "2024-01-01T00:00:00Z",
+      "file_size": 1024,
+      "download_count": 0,
+      "expires_at": "2024-01-08T00:00:00Z",
+      "encrypted_filename": "..."
+    }
+  ]
+}
+```
+
+#### Delete File
+Permanently delete a file.
+
+**Endpoint**: `DELETE /api/v1/files/:id`
+
+**Response**: `200 OK`
+
+### File Upload & Download
+
+#### Upload File
 Upload an encrypted file to the server.
 
 **Endpoint**: `POST /api/v1/upload`
@@ -68,7 +100,7 @@ Upload an encrypted file to the server.
   "iv": "base64-encoded-iv",
   "fileSize": 1024,
   "mimeType": "application/pdf",
-  "expirationDays": 7,
+  "expirationMinutes": 10080,
   "password": "optional-password",
   "downloadLimit": 10,
   "oneTimeDownload": false
@@ -79,15 +111,12 @@ Upload an encrypted file to the server.
 ```json
 {
   "shareId": "uuid-share-id",
-  "shareUrl": "/share-id",
-  "expiresAt": "2024-01-01T00:00:00Z",
-  "downloadLimit": 10,
-  "oneTimeDownload": false
+  "shareUrl": "https://.../share-id#key",
+  "expiresAt": "2024-01-01T00:00:00Z"
 }
 ```
 
-### Download File
-
+#### Download File
 Download an encrypted file from the server.
 
 **Endpoint**: `POST /api/v1/download`
@@ -113,8 +142,88 @@ Download an encrypted file from the server.
 }
 ```
 
-### Health Check
+### File Requests
 
+#### Create Request
+Create a secure link for others to upload files to you.
+
+**Endpoint**: `POST /api/v1/requests`
+
+**Request Body**:
+```json
+{
+  "encryptedTitle": "base64-encrypted-title",
+  "encryptedDescription": "base64-encrypted-desc",
+  "iv": "base64-iv",
+  "expirationMinutes": 10080,
+  "maxUploads": 10
+}
+```
+
+**Response**:
+```json
+{
+  "requestId": "diceware-id",
+  "requestUrl": "/request/diceware-id",
+  "expiresAt": "2024-01-08T00:00:00Z"
+}
+```
+
+#### Get Request Details
+Get public details of a file request.
+
+**Endpoint**: `GET /api/v1/requests/:requestId`
+
+**Response**:
+```json
+{
+  "requestId": "diceware-id",
+  "encryptedTitle": "...",
+  "encryptedDescription": "...",
+  "iv": "...",
+  "expiresAt": "...",
+  "maxUploads": 10
+}
+```
+
+#### Upload to Request
+Upload a file to a specific request.
+
+**Endpoint**: `POST /api/v1/requests/:requestId/upload`
+
+**Request Body**:
+```json
+{
+  "encryptedData": "...",
+  "encryptedFilename": "...",
+  "iv": "...",
+  "fileSize": 1024,
+  "mimeType": "application/pdf"
+}
+```
+
+#### List User Requests
+List active file requests created by the user.
+
+**Endpoint**: `GET /api/v1/requests`
+
+**Response**:
+```json
+{
+  "requests": [
+    {
+      "request_id": "diceware-id",
+      "encrypted_title": "...",
+      "created_at": "...",
+      "expires_at": "..."
+    }
+  ]
+}
+```
+
+### System
+
+#### Health Check
 Check if the API is running.
 
 **Endpoint**: `GET /health`
@@ -140,8 +249,9 @@ All errors follow this format:
 
 **Status Codes**:
 - `400` - Bad Request
+- `401` - Unauthorized
 - `404` - Not Found
-- `410` - Gone (File expired)
+- `410` - Gone (File/Request expired)
 - `429` - Too Many Requests (Rate limit exceeded)
 - `500` - Internal Server Error
 

@@ -7,7 +7,10 @@ Drop is a privacy-first file sharing application that encrypts files client-side
 - **End-to-End Encryption**: Files are encrypted client-side using AES-256-GCM.
 - **Zero-Knowledge**: The server has no visibility into the file contents.
 - **Secure Sharing**: Share files via secure links with optional password protection.
+- **File Requests**: Create secure links to receive encrypted files from others.
+- **Dashboard**: Manage your shared files and monitor downloads.
 - **Configurable Expiration**: Set expiration times for shared files.
+- **One-Time Downloads**: "Burn after reading" functionality for sensitive files.
 - **Responsive Design**: Optimized for desktop and mobile devices.
 
 ## Technology Stack
@@ -17,6 +20,7 @@ Drop is a privacy-first file sharing application that encrypts files client-side
 - **Styling**: Tailwind CSS
 - **Encryption**: Web Crypto API (AES-256-GCM)
 - **Hosting**: Vercel
+- **Infrastructure**: Railway (PostgreSQL), Cloudflare R2 (Storage)
 
 ## Getting Started
 
