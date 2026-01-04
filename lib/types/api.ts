@@ -36,6 +36,16 @@ export interface DownloadResponse {
   oneTimeDownload?: boolean
 }
 
+export interface FileMetadata {
+  shareId: string
+  fileSize: number
+  expiresAt: string
+  passwordProtected: boolean
+  downloadCount: number
+  downloadLimit?: number
+  oneTimeDownload: boolean
+}
+
 export interface FileShare {
   id: string
   share_id: string

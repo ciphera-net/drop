@@ -8,6 +8,8 @@ import { uploadFile, uploadToRequest } from '../lib/api/upload'
 import type { UploadRequest } from '../lib/types/api'
 import { MAX_FILE_SIZE } from '../lib/constants'
 
+import PasswordInput from './PasswordInput'
+
 interface FileUploadProps {
   onUploadComplete?: (shareUrl: string) => void
   requestId?: string
@@ -418,24 +420,13 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-              Password protection
-            </label>
-            <div className="relative">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Optional password"
-                className="w-full pl-10 pr-3 py-2.5 border border-neutral-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all outline-none"
-                disabled={uploading}
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </div>
+            <PasswordInput
+              label="Password protection"
+              value={password}
+              onChange={setPassword}
+              placeholder="Optional password"
+              disabled={uploading}
+            />
           </div>
         </div>
       )}

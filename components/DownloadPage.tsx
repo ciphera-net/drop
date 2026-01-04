@@ -1,9 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { downloadFile } from '../lib/api/download'
+import { getFileMetadata } from '../lib/api/metadata'
 import { decryptFile, decryptString, base64ToArrayBuffer } from '../lib/crypto/encryption'
 import { decodeKeyFromSharing, importEncryptionKey } from '../lib/crypto/key-management'
+
+import PasswordInput from './PasswordInput'
 
 interface DownloadPageProps {
   shareId: string
@@ -16,8 +19,37 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
   const [error, setError] = useState<string | null>(null)
   const [filename, setFilename] = useState<string | null>(null)
   const [isBurned, setIsBurned] = useState(false)
+  const [isPasswordProtected, setIsPasswordProtected] = useState(false)
+  const [metadataLoaded, setMetadataLoaded] = useState(false)
+
+  useEffect(() => {
+    // * Fetch metadata on mount
+    const fetchMetadata = async () => {
+      try {
+        const metadata = await getFileMetadata(shareId)
+        setIsPasswordProtected(metadata.passwordProtected)
+        if (metadata.oneTimeDownload && metadata.downloadLimit && metadata.downloadCount >= metadata.downloadLimit) {
+            // Check if it's already burned (though API usually returns Gone or Forbidden)
+             setIsBurned(true)
+        }
+      } catch (err) {
+        // Don't block loading on metadata failure, but it might indicate file not found
+        console.error('Failed to load metadata:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load file info')
+      } finally {
+        setMetadataLoaded(true)
+      }
+    }
+    fetchMetadata()
+  }, [shareId])
 
   const handleDownload = async (keyFromHash?: string) => {
+    // * Pre-check password requirement
+    if (isPasswordProtected && !password) {
+      setError('Password is required to download this file')
+      return
+    }
+
     const key = keyFromHash || encryptionKey
     if (!key) {
       setError('Encryption key is required')
@@ -147,16 +179,17 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
 
         <div className="space-y-4 pt-2">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Password Protection
-            </label>
-            <input
-              type="password"
+            <PasswordInput
+              label="Password Protection"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password (if required)"
-              className="w-full px-4 py-3 border border-neutral-200 rounded-xl bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 focus:border-brand-orange transition-all duration-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={downloading || isBurned}
+              onChange={(value) => {
+                setPassword(value)
+                if (error === 'Password is required to download this file') setError(null)
+              }}
+              placeholder={isPasswordProtected ? "Enter password to unlock" : "Enter password (if required)"}
+              required={isPasswordProtected}
+              error={error === 'Password is required to download this file' ? 'Required' : undefined}
+              disabled={downloading || isBurned || (!metadataLoaded)}
             />
           </div>
 
