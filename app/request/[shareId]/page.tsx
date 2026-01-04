@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation'
 import FileUpload from '../../../components/FileUpload'
 import apiRequest from '../../../lib/api/client'
 import { FileRequest } from '../../../lib/types/api'
-import { decodeKeyFromSharing } from '../../../lib/crypto/key-management'
+import { decodeKeyFromSharing, importEncryptionKey } from '../../../lib/crypto/key-management'
+import { decryptString, base64ToArrayBuffer } from '../../../lib/crypto/encryption'
 import Link from 'next/link'
 
 export default function RequestPage() {
@@ -41,7 +42,42 @@ export default function RequestPage() {
     const fetchRequest = async () => {
       try {
         const data = await apiRequest<FileRequest>(`/requests/${requestId}`)
-        setRequestDetails(data)
+        
+        // * Decrypt Metadata if key is available
+        if (requestKey && data.encryptedTitle && data.iv) {
+           try {
+             const cryptoKey = await importEncryptionKey(requestKey)
+             const ivArr = new Uint8Array(base64ToArrayBuffer(data.iv))
+             
+             const decryptedTitle = await decryptString(
+                 base64ToArrayBuffer(data.encryptedTitle),
+                 cryptoKey,
+                 ivArr
+             )
+             
+             let decryptedDesc = ''
+             if (data.encryptedDescription) {
+                 decryptedDesc = await decryptString(
+                     base64ToArrayBuffer(data.encryptedDescription),
+                     cryptoKey,
+                     ivArr
+                 )
+             }
+             
+             setRequestDetails({
+                 ...data,
+                 title: decryptedTitle,
+                 description: decryptedDesc
+             })
+           } catch (e) {
+             console.error('Failed to decrypt metadata:', e)
+             // Fallback to showing generic or encrypted data? 
+             // Better to leave title undefined so "Send Files Securely" fallback works
+             setRequestDetails(data) 
+           }
+        } else {
+            setRequestDetails(data)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Request not found or expired')
       } finally {
@@ -52,7 +88,7 @@ export default function RequestPage() {
     if (requestId) {
       fetchRequest()
     }
-  }, [requestId])
+  }, [requestId, requestKey]) // Added requestKey dependency
 
   if (loading) {
     return (

@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import apiRequest from '../lib/api/client'
 import { CreateRequestResponse, CreateRequestParams } from '../lib/types/api'
-import { generateEncryptionKey, encodeKeyForSharing } from '../lib/crypto/key-management'
+import { generateEncryptionKey, encodeKeyForSharing, generateIV } from '../lib/crypto/key-management'
+import { encryptString, arrayBufferToBase64 } from '../lib/crypto/encryption'
 
 interface FileRequestProps {
   onRequestCreated?: (shareUrl: string) => void
@@ -36,11 +37,23 @@ export default function FileRequest({ onRequestCreated }: FileRequestProps) {
     try {
       // * Generate the encryption key that will be embedded in the URL
       const keyPair = await generateEncryptionKey()
+      const iv = generateIV()
       const encodedKey = encodeKeyForSharing(keyPair.raw)
 
+      // * Encrypt Title & Description
+      const encryptedTitleBuffer = await encryptString(title, keyPair.key, iv)
+      const encryptedTitle = arrayBufferToBase64(encryptedTitleBuffer)
+      
+      let encryptedDescription = undefined
+      if (description) {
+          const encDescBuffer = await encryptString(description, keyPair.key, iv)
+          encryptedDescription = arrayBufferToBase64(encDescBuffer)
+      }
+
       const requestBody: CreateRequestParams = {
-        title,
-        description,
+        encryptedTitle,
+        encryptedDescription,
+        iv: arrayBufferToBase64(iv),
         expirationMinutes,
         maxUploads
       }

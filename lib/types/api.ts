@@ -50,8 +50,9 @@ export interface FileShare {
 }
 
 export interface CreateRequestParams {
-  title: string
-  description?: string
+  encryptedTitle: string
+  encryptedDescription?: string
+  iv: string // Base64
   expirationMinutes?: number
   maxUploads?: number
 }
@@ -65,8 +66,11 @@ export interface CreateRequestResponse {
 export interface FileRequest {
   id: string
   request_id: string
-  title?: string
-  description?: string
+  title?: string // Decrypted on client
+  description?: string // Decrypted on client
+  encryptedTitle?: string
+  encryptedDescription?: string
+  iv?: string // Base64
   expires_at: string
   max_uploads?: number
   created_at: string
