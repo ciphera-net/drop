@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -27,12 +28,36 @@ export default function SignupPage() {
         body: JSON.stringify({ email, password: derivedPassword }),
       })
 
-      router.push('/login?message=Account created successfully')
+      setSuccess(true)
     } catch (err: any) {
       setError(err.message || 'Failed to create account')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-6 rounded-lg border border-neutral-200 bg-white p-8 shadow-sm text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-neutral-900">Check your email</h2>
+          <p className="text-neutral-600">
+            We've sent a verification link to <span className="font-medium text-neutral-900">{email}</span>.
+            Please verify your email to continue.
+          </p>
+          <div className="pt-4">
+             <Link href="/login" className="text-sm font-medium text-neutral-900 hover:underline">
+               Return to Login
+             </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
