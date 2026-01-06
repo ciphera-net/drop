@@ -96,7 +96,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-2xl shadow-neutral-200/50 border border-neutral-200 backdrop-blur-sm max-w-md w-full mx-auto flex flex-col justify-center transition-all duration-300">
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-2xl shadow-neutral-200/50 border border-neutral-200 backdrop-blur-sm max-w-md w-full mx-auto flex flex-col justify-center transition-all duration-300 min-h-[500px]">
           {shareUrl ? (
             <ShareLink 
               shareUrl={shareUrl} 
@@ -114,16 +114,16 @@ export default function HomePage() {
                   <FileRequest onRequestCreated={setShareUrl} />
                 ) : (
                   // Unauthenticated View
-                  <div className="py-8 text-center flex flex-col items-center justify-center h-full">
-                    <div className="w-20 h-20 bg-brand-orange/5 rounded-full flex items-center justify-center mb-6 shadow-sm border border-brand-orange/10">
+                  <div className="text-center flex flex-col items-center justify-center h-full">
+                    <div className="w-20 h-20 bg-brand-orange/5 rounded-full flex items-center justify-center mb-5 shadow-sm border border-brand-orange/10">
                       <svg className="w-10 h-10 text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
                     </div>
                     
-                    <h3 className="text-2xl font-bold text-neutral-900 mb-3">Authentication Required</h3>
+                    <h3 className="text-2xl font-bold text-neutral-900 mb-2">Authentication Required</h3>
                     
-                    <p className="text-neutral-500 mb-8 max-w-xs leading-relaxed">
+                    <p className="text-neutral-500 mb-6 max-w-xs leading-relaxed">
                       To ensure security, you must be signed in to request encrypted files from others.
                     </p>
                     
