@@ -64,7 +64,7 @@ function AuthCallbackContent() {
         
         const payload = JSON.parse(atob(data.access_token.split('.')[1]))
         
-        login(data.access_token, {
+        login(data.access_token, data.refresh_token, {
             id: payload.sub,
             email: payload.email || 'user@ciphera.net' // Fallback if email claim missing
         })

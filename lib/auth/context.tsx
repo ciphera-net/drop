@@ -12,7 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (token: string, user: User) => void
+  login: (token: string, refreshToken: string, user: User) => void
   logout: () => void
 }
 
@@ -29,23 +29,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    // * Check for token in localStorage on mount
     const token = localStorage.getItem('token')
+    const refreshToken = localStorage.getItem('refreshToken')
     const savedUser = localStorage.getItem('user')
     
     if (token && savedUser) {
       try {
         setUser(JSON.parse(savedUser))
+        
+        // * TODO: Here we could check if token is expired (JWT decode) and refresh immediately
+        // * For now we rely on the API client interceptor to handle 401s (To be implemented)
       } catch (e) {
         localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
       }
     }
     setLoading(false)
   }, [])
 
-  const login = (token: string, userData: User) => {
+  const login = (token: string, refreshToken: string, userData: User) => {
     localStorage.setItem('token', token)
+    localStorage.setItem('refreshToken', refreshToken)
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
     router.refresh()
@@ -53,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
     setUser(null)
     router.push('/')

@@ -37,8 +37,51 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     if (response.status === 401) {
-       // Optional: Redirect to login or clear token?
-       // localStorage.removeItem('token')
+      // * Attempt Token Refresh if 401
+      if (typeof window !== 'undefined') {
+        const refreshToken = localStorage.getItem('refreshToken')
+        
+        // * Prevent infinite loop: Don't refresh if the failed request WAS a refresh request
+        if (refreshToken && !endpoint.includes('/auth/refresh')) {
+          try {
+            const refreshRes = await fetch(`${AUTH_URL}/api/v1/auth/refresh`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh_token: refreshToken }),
+            })
+
+            if (refreshRes.ok) {
+              const data = await refreshRes.json()
+              localStorage.setItem('token', data.access_token)
+              localStorage.setItem('refreshToken', data.refresh_token) // Rotation
+
+              // * Retry original request with new token
+              const newHeaders = {
+                ...headers,
+                'Authorization': `Bearer ${data.access_token}`,
+              }
+              const retryResponse = await fetch(url, {
+                ...options,
+                headers: newHeaders,
+              })
+              
+              if (retryResponse.ok) {
+                return retryResponse.json()
+              }
+            } else {
+              // * Refresh failed, logout
+              localStorage.removeItem('token')
+              localStorage.removeItem('refreshToken')
+              localStorage.removeItem('user')
+              window.location.href = '/login'
+              throw new Error('Session expired')
+            }
+          } catch (e) {
+            // * Network error during refresh or logout
+            throw e
+          }
+        }
+      }
     }
 
     const error = await response.json().catch(() => ({
