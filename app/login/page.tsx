@@ -1,39 +1,41 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import apiRequest from '@/lib/api/client'
-import { useAuth } from '@/lib/auth/context'
-import { deriveAuthKey } from '@/lib/crypto/password'
+import { generatePKCE, generateRandomString } from '@/lib/crypto/pkce'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const { login } = useAuth()
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleLogin = async () => {
     setLoading(true)
-    setError(null)
-
     try {
-      // * Derive auth key from password so raw password never leaves client
-      const derivedPassword = await deriveAuthKey(password, email)
+      // * Generate PKCE challenge
+      const { verifier, challenge } = await generatePKCE()
+      const state = generateRandomString(16)
 
-      const response = await apiRequest<{ token: string; user: { id: string; email: string } }>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password: derivedPassword }),
+      // * Store verifier and state for verification on callback
+      localStorage.setItem('oauth_code_verifier', verifier)
+      localStorage.setItem('oauth_state', state)
+
+      // * Build authorization URL
+      const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:8081'
+      const clientId = 'drop-app'
+      const redirectUri = window.location.origin + '/auth/callback'
+      
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        state: state,
+        code_challenge: challenge,
+        code_challenge_method: 'S256'
       })
 
-      login(response.token, response.user)
-      router.push('/dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Failed to login')
-    } finally {
+      // * Redirect to Ciphera Auth
+      window.location.href = `${authUrl}/api/v1/oauth/authorize?${params.toString()}`
+    } catch (err) {
+      console.error('Failed to initialize login', err)
       setLoading(false)
     }
   }
@@ -44,57 +46,28 @@ export default function LoginPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold">Welcome back</h1>
           <p className="mt-2 text-sm text-neutral-600">
-            Sign in to your Ciphera ID
+            Sign in to continue to Drop
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="mt-8 space-y-6">
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-500">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm placeholder-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm placeholder-neutral-400 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
+        <div className="mt-8">
           <button
-            type="submit"
+            onClick={handleLogin}
             disabled={loading}
-            className="w-full btn-primary disabled:opacity-50"
+            className="w-full btn-primary disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? (
+              'Redirecting...'
+            ) : (
+              <>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Login with Ciphera ID
+              </>
+            )}
           </button>
-        </form>
+        </div>
 
         <div className="text-center text-sm">
           <span className="text-neutral-600">
