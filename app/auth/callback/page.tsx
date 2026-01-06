@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth/context'
 
@@ -9,10 +9,20 @@ function AuthCallbackContent() {
   const searchParams = useSearchParams()
   const { login } = useAuth()
   const [error, setError] = useState<string | null>(null)
+  const processedRef = useRef(false)
 
   useEffect(() => {
+    // * Prevent double execution (React Strict Mode or fast re-renders)
+    if (processedRef.current) return
+    
     const code = searchParams.get('code')
     const state = searchParams.get('state')
+    
+    // * Skip if params are missing (might be initial render before params are ready)
+    if (!code || !state) return
+
+    processedRef.current = true
+
     const storedState = localStorage.getItem('oauth_state')
     const codeVerifier = localStorage.getItem('oauth_code_verifier')
 
@@ -22,8 +32,10 @@ function AuthCallbackContent() {
     }
 
     if (state !== storedState) {
-      setError('Invalid state')
-      return
+        // * Debugging: Log state mismatch to help user diagnose
+        console.error('State mismatch', { received: state, stored: storedState })
+        setError('Invalid state')
+        return
     }
 
     const exchangeCode = async () => {
@@ -49,14 +61,6 @@ function AuthCallbackContent() {
         }
 
         const data = await res.json()
-        
-        // * In a real app, we would fetch user profile here.
-        // * But our token contains 'sub' (id) and (we added) 'email'.
-        // * However, the token is signed and we can't easily read claims on client without a library.
-        // * For now, we will assume the token is valid and just decode it manually to get email/id 
-        // * OR since we control the response of /oauth/token, we can just return user info there too?
-        // * No, standard OAuth doesn't return user info in token response usually.
-        // * Let's just decode the token payload (it's base64).
         
         const payload = JSON.parse(atob(data.access_token.split('.')[1]))
         
