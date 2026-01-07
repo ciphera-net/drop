@@ -77,3 +77,13 @@ export interface ErrorResponse {
   error: string
   message?: string
 }
+
+export interface FileMetadata {
+  shareId: string
+  fileSize: number
+  expiresAt: string
+  passwordProtected: boolean
+  downloadCount: number
+  downloadLimit: number | null
+  oneTimeDownload: boolean
+}
