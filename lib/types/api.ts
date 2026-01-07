@@ -20,3 +20,13 @@ export interface UploadResponse {
   shareUrl: string
   expiresAt: string
 }
+
+export interface FileShare {
+  id: string
+  share_id: string
+  file_size: number
+  download_count: number
+  download_limit: number | null
+  created_at: string
+  expires_at: string
+}
