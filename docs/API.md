@@ -123,7 +123,10 @@ Upload an encrypted file to the server.
   "expirationMinutes": 10080,
   "password": "optional-password",
   "downloadLimit": 10,
-  "oneTimeDownload": false
+  "oneTimeDownload": false,
+  "captcha_id": "optional-captcha-id",
+  "captcha_solution": "optional-captcha-solution",
+  "captcha_token": "optional-captcha-token"
 }
 ```
 
@@ -135,6 +138,8 @@ Upload an encrypted file to the server.
   "expiresAt": "2024-01-01T00:00:00Z"
 }
 ```
+
+**Note on Captcha**: Anonymous uploads may require captcha verification. If the server returns `423 Locked`, the response will include `"require_captcha": true`. The client must then solve a captcha (using the `ciphera-captcha` service) and retry the upload with `captcha_token` (or `captcha_id` + `captcha_solution`).
 
 #### Download File
 Download an encrypted file from the server.
@@ -272,6 +277,7 @@ All errors follow this format:
 - `401` - Unauthorized
 - `404` - Not Found
 - `410` - Gone (File/Request expired)
+- `423` - Locked (Captcha verification required)
 - `429` - Too Many Requests (Rate limit exceeded)
 - `500` - Internal Server Error
 
