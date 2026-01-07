@@ -17,6 +17,16 @@ Drop is a privacy-first file sharing application that encrypts files client-side
 - **One-Time Downloads**: "Burn after reading" functionality for sensitive files.
 - **Responsive Design**: Optimized for desktop and mobile devices.
 
+## Architecture & Ecosystem
+
+Drop is built on the **Ciphera** privacy platform, utilizing a microservices architecture to ensure separation of concerns and rigorous security boundaries:
+
+- **Ciphera Auth**: A centralized identity management service that handles secure sessions, authentication, and OAuth flows.
+- **Ciphera Relay**: A zero-knowledge storage relay service. It processes encrypted data blobs without ever having access to the encryption keys, ensuring true end-to-end privacy.
+- **Drop Backend**: The core orchestrator for the Drop application, managing file metadata, expiration policies, and access controls.
+
+This modular design ensures that cryptographic operations (Client) are strictly separated from identity (Auth) and persistence (Relay/Backend).
+
 ## Technology Stack
 
 - **Framework**: Next.js 14+ (App Router)
