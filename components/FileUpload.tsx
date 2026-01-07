@@ -7,8 +7,10 @@ import { encodeKeyForSharing, importEncryptionKey } from '../lib/crypto/key-mana
 import { uploadFile, uploadToRequest } from '../lib/api/upload'
 import type { UploadRequest } from '../lib/types/api'
 import { MAX_FILE_SIZE } from '../lib/constants'
+import { useAuth } from '../lib/auth/context'
 
 import PasswordInput from './PasswordInput'
+import Captcha from './Captcha'
 
 interface FileUploadProps {
   onUploadComplete?: (shareUrl: string) => void
@@ -17,6 +19,7 @@ interface FileUploadProps {
 }
 
 export default function FileUpload({ onUploadComplete, requestId, requestKey }: FileUploadProps) {
+  const { user } = useAuth()
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -28,6 +31,10 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
   const [downloadLimit, setDownloadLimit] = useState<number | undefined>()
   const [oneTimeDownload, setOneTimeDownload] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Captcha State
+  const [captchaId, setCaptchaId] = useState('')
+  const [captchaSolution, setCaptchaSolution] = useState('')
 
   const EXPIRATION_OPTIONS = [
     { label: '1 Hour', value: 60 },
@@ -97,9 +104,20 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }, [])
 
+  const handleCaptchaVerify = useCallback((id: string, solution: string) => {
+    setCaptchaId(id)
+    setCaptchaSolution(solution)
+  }, [])
+
   const handleUpload = useCallback(async () => {
     if (files.length === 0) {
       setError('Please select at least one file')
+      return
+    }
+
+    // Require captcha for anonymous uploads (unless it's a request upload)
+    if (!user && !requestId && !captchaSolution) {
+      setError('Please complete the security check')
       return
     }
 
@@ -160,6 +178,8 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
         password: !requestId ? (password || undefined) : undefined,
         downloadLimit: !requestId ? (downloadLimit || undefined) : undefined,
         oneTimeDownload: !requestId ? oneTimeDownload : undefined,
+        captcha_id: !user && !requestId ? captchaId : undefined,
+        captcha_solution: !user && !requestId ? captchaSolution : undefined,
       }
 
       // * Upload to backend
@@ -210,14 +230,16 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
         setPassword('')
         setDownloadLimit(undefined)
         setOneTimeDownload(false)
+        setCaptchaSolution('') // Reset captcha for next upload
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
+      setCaptchaSolution('') // Reset captcha on error too
     } finally {
       setUploading(false)
       setProgress(0)
     }
-  }, [files, expirationMinutes, password, downloadLimit, oneTimeDownload, onUploadComplete, requestId, requestKey])
+  }, [files, expirationMinutes, password, downloadLimit, oneTimeDownload, onUploadComplete, requestId, requestKey, user, captchaId, captchaSolution])
 
   return (
     <div className={`w-full max-w-md mx-auto ${files.length > 0 ? 'space-y-6' : ''}`}>
@@ -428,6 +450,16 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
               disabled={uploading}
             />
           </div>
+
+          {/* Captcha */}
+          {!user && (
+            <div className="pt-2">
+              <Captcha 
+                onVerify={handleCaptchaVerify} 
+                className={uploading ? 'opacity-50 pointer-events-none' : ''}
+              />
+            </div>
+          )}
         </div>
       )}
 

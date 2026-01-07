@@ -28,6 +28,8 @@ export async function uploadFile(
     password: request.password,
     downloadLimit: request.downloadLimit,
     oneTimeDownload: request.oneTimeDownload,
+    captcha_id: request.captcha_id,
+    captcha_solution: request.captcha_solution,
   }
 
   return new Promise((resolve, reject) => {
@@ -57,6 +59,12 @@ export async function uploadFile(
           const error = JSON.parse(xhr.responseText)
           // * Include details if available
           const errorMessage = error.details ? `${error.error}: ${error.details}` : (error.message || error.error || 'Request failed')
+          
+          // * Special handling for captcha required
+          if (error.require_captcha) {
+             // Pass this info up so UI can show captcha
+          }
+          
           reject(new Error(errorMessage))
         } catch (e) {
           reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`))
@@ -89,6 +97,8 @@ export async function uploadToRequest(
     fileSize: request.file.size,
     mimeType: request.file.type,
     // Expiration and limits are controlled by the Request config, not the uploader
+    captcha_id: request.captcha_id,
+    captcha_solution: request.captcha_solution,
   }
 
   return new Promise((resolve, reject) => {
