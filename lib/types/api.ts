@@ -43,3 +43,17 @@ export interface FileShare {
   created_at: string
   expires_at: string
 }
+
+export interface CreateRequestParams {
+  encryptedTitle: string
+  encryptedDescription?: string
+  iv: string
+  expirationMinutes: number
+  maxUploads?: number
+}
+
+export interface CreateRequestResponse {
+  requestId: string
+  requestUrl: string
+  expiresAt: string
+}
