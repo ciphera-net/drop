@@ -15,27 +15,33 @@ export async function uploadFile(
   request: UploadRequest,
   onProgress?: (progress: number, loaded: number, total: number) => void
 ): Promise<UploadResponse> {
-  // * Convert encrypted data to base64 for JSON transmission
-  const encryptedDataBase64 = arrayBufferToBase64(request.encryptedData)
-  const ivBase64 = arrayBufferToBase64(request.iv)
+  const formData = new FormData()
 
-  const body = {
-    encryptedData: encryptedDataBase64,
-    encryptedFilename: request.encryptedFilename,
-    iv: ivBase64,
-    fileSize: request.file.size,
-    mimeType: request.file.type,
-    expirationMinutes: request.expirationMinutes || 10080, // Default 7 days
-    password: request.password,
-    downloadLimit: request.downloadLimit,
-    oneTimeDownload: request.oneTimeDownload,
-    captcha_id: request.captcha_id,
-    captcha_solution: request.captcha_solution,
-    captcha_token: request.captcha_token,
-  }
+  // * Create a Blob from the encrypted ArrayBuffer
+  // This is efficient and doesn't require Base64 conversion
+  const blob = new Blob([request.encryptedData], { type: 'application/octet-stream' })
+  formData.append('file', blob)
+
+  // * Append metadata
+  formData.append('encryptedFilename', request.encryptedFilename)
+  formData.append('iv', arrayBufferToBase64(request.iv))
+  formData.append('fileSize', request.file.size.toString())
+  formData.append('mimeType', request.file.type)
+  if (request.expirationMinutes) formData.append('expirationMinutes', request.expirationMinutes.toString())
+  if (request.password) formData.append('password', request.password)
+  if (request.downloadLimit) formData.append('downloadLimit', request.downloadLimit.toString())
+  if (request.oneTimeDownload) formData.append('oneTimeDownload', 'true')
+
+  // * Captcha
+  if (request.captcha_id) formData.append('captcha_id', request.captcha_id)
+  if (request.captcha_solution) formData.append('captcha_solution', request.captcha_solution)
+  if (request.captcha_token) formData.append('captcha_token', request.captcha_token)
 
   try {
-    const response = await axios.post(`${API_URL}/api/v1/upload`, body, {
+    const response = await axios.post(`${API_URL}/api/v1/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -60,24 +66,28 @@ export async function uploadToRequest(
   request: UploadRequest,
   onProgress?: (progress: number, loaded: number, total: number) => void
 ): Promise<UploadResponse> {
-  // * Convert encrypted data to base64 for JSON transmission
-  const encryptedDataBase64 = arrayBufferToBase64(request.encryptedData)
-  const ivBase64 = arrayBufferToBase64(request.iv)
+  const formData = new FormData()
 
-  const body = {
-    encryptedData: encryptedDataBase64,
-    encryptedFilename: request.encryptedFilename,
-    iv: ivBase64,
-    fileSize: request.file.size,
-    mimeType: request.file.type,
-    // Expiration and limits are controlled by the Request config, not the uploader
-    captcha_id: request.captcha_id,
-    captcha_solution: request.captcha_solution,
-    captcha_token: request.captcha_token,
-  }
+  // * Create a Blob from the encrypted ArrayBuffer
+  const blob = new Blob([request.encryptedData], { type: 'application/octet-stream' })
+  formData.append('file', blob)
+
+  // * Append metadata
+  formData.append('encryptedFilename', request.encryptedFilename)
+  formData.append('iv', arrayBufferToBase64(request.iv))
+  formData.append('fileSize', request.file.size.toString())
+  formData.append('mimeType', request.file.type)
+  
+  // * Captcha
+  if (request.captcha_id) formData.append('captcha_id', request.captcha_id)
+  if (request.captcha_solution) formData.append('captcha_solution', request.captcha_solution)
+  if (request.captcha_token) formData.append('captcha_token', request.captcha_token)
 
   try {
-    const response = await axios.post(`${API_URL}/api/v1/requests/${requestId}/upload`, body, {
+    const response = await axios.post(`${API_URL}/api/v1/requests/${requestId}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
