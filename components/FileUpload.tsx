@@ -310,7 +310,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand-orange bg-brand-orange/5 hover:bg-brand-orange/10 rounded-full transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand-orange bg-brand-orange/5 hover:bg-brand-orange/10 rounded-xl transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

@@ -70,7 +70,7 @@ export default function HomePage() {
 
         {/* * Magnetic Toggle Buttons */}
         <div className="flex justify-center mb-6">
-          <div className="bg-neutral-100 p-1.5 rounded-full inline-flex relative border border-neutral-200 shadow-sm">
+          <div className="bg-neutral-100 p-1.5 rounded-xl inline-flex relative border border-neutral-200 shadow-sm">
             {['send', 'receive'].map((tab) => (
               <button
                 key={tab}
@@ -78,7 +78,7 @@ export default function HomePage() {
                   setMode(tab as 'send' | 'receive')
                   setShareUrl(null)
                 }}
-                className={`relative px-6 py-2 rounded-full text-sm font-medium transition-colors z-10 capitalize ${
+                className={`relative px-6 py-2 rounded-xl text-sm font-medium transition-colors z-10 capitalize ${
                   mode === tab ? 'text-white' : 'text-neutral-500 hover:text-neutral-900'
                 }`}
               >
@@ -86,7 +86,7 @@ export default function HomePage() {
                 {mode === tab && (
                   <motion.div
                     layoutId="active-pill"
-                    className="absolute inset-0 bg-brand-orange rounded-full shadow-md shadow-brand-orange/25"
+                    className="absolute inset-0 bg-brand-orange rounded-xl shadow-md shadow-brand-orange/25"
                     style={{ zIndex: -1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />

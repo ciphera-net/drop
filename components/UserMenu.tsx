@@ -11,8 +11,8 @@ export default function UserMenu() {
   if (loading) {
     return (
       <div className="flex items-center gap-3">
-        <div className="h-9 w-16 animate-pulse rounded-lg bg-neutral-100" />
-        <div className="h-9 w-20 animate-pulse rounded-full bg-neutral-100" />
+        <div className="h-9 w-16 animate-pulse rounded-xl bg-neutral-100" />
+        <div className="h-9 w-20 animate-pulse rounded-xl bg-neutral-100" />
       </div>
     )
   }
@@ -22,7 +22,7 @@ export default function UserMenu() {
       <div className="flex items-center gap-3">
         <button
           onClick={logout}
-          className="text-sm font-medium text-neutral-600 hover:text-neutral-900 px-4 py-2 rounded-lg hover:bg-neutral-100/50 transition-all duration-200"
+          className="text-sm font-medium text-neutral-600 hover:text-neutral-900 px-4 py-2 rounded-xl hover:bg-neutral-100/50 transition-all duration-200"
         >
           Sign Out
         </button>
@@ -40,7 +40,7 @@ export default function UserMenu() {
     <div className="flex items-center gap-3">
       <Link
         href="/login"
-        className="text-sm font-medium text-neutral-600 hover:text-neutral-900 px-4 py-2 rounded-lg hover:bg-neutral-100/50 transition-all duration-200"
+        className="text-sm font-medium text-neutral-600 hover:text-neutral-900 px-4 py-2 rounded-xl hover:bg-neutral-100/50 transition-all duration-200"
       >
         Sign in
       </Link>
