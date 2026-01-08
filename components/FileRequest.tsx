@@ -78,24 +78,24 @@ export default function FileRequest({ onRequestCreated }: FileRequestProps) {
 
   return (
     <div className="w-full max-w-md mx-auto h-full flex flex-col justify-between">
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Header Icon */}
-        <div className="flex justify-center mb-2">
-          <div className="w-16 h-16 bg-brand-orange/5 rounded-full flex items-center justify-center text-brand-orange shadow-sm border border-brand-orange/10">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex justify-center mb-1">
+          <div className="w-12 h-12 bg-brand-orange/5 rounded-full flex items-center justify-center text-brand-orange shadow-sm border border-brand-orange/10">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
           </div>
         </div>
         
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <h3 className="text-xl font-bold text-neutral-900">Request Files</h3>
           <p className="text-sm text-neutral-500 mt-1">Create a secure link to receive encrypted files</p>
         </div>
 
         {/* Title Input */}
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
             Request Title <span className="text-brand-orange">*</span>
           </label>
           <input
@@ -103,22 +103,22 @@ export default function FileRequest({ onRequestCreated }: FileRequestProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Project Documents"
-            className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all outline-none"
+            className="w-full px-4 py-2 border border-neutral-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all outline-none"
             disabled={loading}
           />
         </div>
 
         {/* Description Input */}
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
             Description <span className="text-neutral-400 font-normal">(Optional)</span>
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Instructions for the uploader..."
-            rows={3}
-            className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all outline-none resize-none"
+            rows={2}
+            className="w-full px-4 py-2 border border-neutral-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange transition-all outline-none resize-none"
             disabled={loading}
           />
         </div>

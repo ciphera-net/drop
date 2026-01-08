@@ -140,7 +140,7 @@ export default function RequestPage() {
         </div>
 
         {/* Upload Card */}
-        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl shadow-brand-orange/5 border border-neutral-100/50 backdrop-blur-sm max-w-md mx-auto">
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl shadow-brand-orange/5 border border-neutral-100/50 backdrop-blur-sm max-w-md mx-auto aspect-square flex flex-col justify-center">
           {success ? (
             <div className="text-center py-8 space-y-4">
               <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto text-green-500">

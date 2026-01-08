@@ -92,7 +92,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-2xl shadow-neutral-200/50 border border-neutral-200 backdrop-blur-sm max-w-md w-full mx-auto flex flex-col justify-center transition-all duration-300 min-h-[500px]">
+        <div className="bg-white p-6 md:p-8 rounded-3xl shadow-2xl shadow-neutral-200/50 border border-neutral-200 backdrop-blur-sm max-w-md w-full mx-auto flex flex-col justify-center transition-all duration-300 aspect-square">
           {shareUrl ? (
             <ShareLink 
               shareUrl={shareUrl} 
