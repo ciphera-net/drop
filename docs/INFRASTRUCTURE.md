@@ -13,6 +13,7 @@ Ciphera follows a microservices architecture with a strict separation between Au
 | **Ciphera Auth** | Go (Gin) | Railway | Identity Provider, OAuth2, JWT Issuance |
 | **Drop Backend** | Go (Gin) | Railway | File Metadata, Upload/Download orchestration |
 | **Drop Frontend** | Next.js (React) | Vercel | User Interface, Client-side Encryption |
+| **Ciphera Captcha** | Go (Gin) | Railway | Bot Protection, PoW/Visual Captcha Verification |
 | **Ciphera Relay** | Stalwart Mail | Hetzner Cloud (VPS) | Transactional Email Delivery (SMTP) |
 | **Database** | PostgreSQL | Railway | Relational Data (Users, Metadata) |
 | **Storage** | Cloudflare R2 | Cloudflare | Encrypted File Blobs (S3 Compatible) |
@@ -28,6 +29,16 @@ Ciphera follows a microservices architecture with a strict separation between Au
   - `SMTP_USER`: `noreply@ciphera.net`
   - `SMTP_PASS`: (Secret)
   - `FRONTEND_URL`: `https://drop.ciphera.net`
+
+### Captcha Service (`ciphera-captcha`)
+- **Repo**: `ciphera-drop/ciphera-captcha`
+- **Env Vars**:
+  - `PORT`: `8082` (default)
+  - `JWT_SECRET`: Secret key for signing captcha tokens (shared with backend services)
+  - `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+  - `CAPTCHA_LENGTH`: Number of characters in visual captcha (default: 6)
+  - `CAPTCHA_EXPIRATION_MINUTES`: Token validity duration (default: 10)
+- **UI Package**: `@ciphera-net/captcha` - Reusable React component for all Ciphera apps
 
 ### Mail Server (`ciphera-relay`)
 - **Repo**: `ciphera-relay` (Separate Repo)
@@ -58,6 +69,9 @@ Ciphera follows a microservices architecture with a strict separation between Au
 - **Env Vars**:
   - `NEXT_PUBLIC_API_URL`: `https://drop-api.ciphera.net`
   - `NEXT_PUBLIC_AUTH_URL`: `https://auth.ciphera.net`
+  - `NEXT_PUBLIC_CAPTCHA_API_URL`: `https://captcha.ciphera.net/api/v1`
+- **Dependencies**:
+  - `@ciphera-net/captcha`: Shared captcha UI component from `ciphera-captcha/ui`
 
 ## Monitoring & Maintenance
 

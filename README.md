@@ -35,6 +35,7 @@ This modular design ensures that cryptographic operations (Client) are strictly 
 - **Encryption**: Web Crypto API (AES-256-GCM)
 - **Hosting**: Vercel
 - **Infrastructure**: Railway (PostgreSQL), Cloudflare R2 (Storage)
+- **Shared Packages**: `@ciphera-net/captcha` - Reusable captcha UI component from `ciphera-captcha`
 
 ## Getting Started
 
@@ -56,9 +57,11 @@ This modular design ensures that cryptographic operations (Client) are strictly 
     cp .env.example .env.local
     ```
     
-    Edit `.env.local` to set your backend API URL:
+    Edit `.env.local` to set your backend API URLs:
     ```bash
     NEXT_PUBLIC_API_URL=http://localhost:8080
+    NEXT_PUBLIC_AUTH_URL=http://localhost:8081
+    NEXT_PUBLIC_CAPTCHA_API_URL=http://localhost:8083/api/v1
     ```
 
 3.  **Run Development Server**:
