@@ -11,6 +11,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 // 50MB chunks
 export const CHUNK_SIZE = 50 * 1024 * 1024 
+const MAX_CONCURRENT_UPLOADS = 3 // * Limit parallel uploads to prevent memory issues
 
 interface InitUploadResponse {
   uploadId: string
@@ -84,13 +85,21 @@ export async function uploadFileChunked(
   
   const { uploadToken, uploadId, shareId } = initRes.data
 
-  // * 4. Loop Chunks
+  // * 4. Parallel Chunk Upload
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
-  const parts: { etag: string; partNumber: number }[] = []
+  const chunkProgress = new Array(totalChunks).fill(0)
   
-  let uploadedBytes = 0
-  
-  for (let i = 0; i < totalChunks; i++) {
+  // Helper to safely update progress across concurrent uploads
+  const updateGlobalProgress = (chunkIndex: number, loaded: number) => {
+    if (!onProgress) return
+    chunkProgress[chunkIndex] = loaded
+    const totalLoaded = chunkProgress.reduce((a, b) => a + b, 0)
+    const percent = Math.min((totalLoaded / file.size) * 100, 100)
+    onProgress(percent, totalLoaded, file.size)
+  }
+
+  // Define the upload task for a single chunk
+  const uploadChunk = async (i: number) => {
     const start = i * CHUNK_SIZE
     const end = Math.min(start + CHUNK_SIZE, file.size)
     const chunkBlob = file.slice(start, end)
@@ -101,7 +110,6 @@ export async function uploadFileChunked(
     
     // Upload Part
     const partNumber = i + 1
-    
     const formData = new FormData()
     formData.append('uploadToken', uploadToken)
     formData.append('partNumber', partNumber.toString())
@@ -111,32 +119,55 @@ export async function uploadFileChunked(
 
     const chunkRes = await axios.post<UploadPartResponse>(`${API_URL}/api/v1/upload/part`, formData, {
       onUploadProgress: (e) => {
-        if (onProgress && e.total) {
-          const chunkProgress = (e.loaded / e.total) * chunkBlob.size
-          const currentTotal = uploadedBytes + chunkProgress
-          const percent = (currentTotal / file.size) * 100
-          onProgress(percent, currentTotal, file.size)
+        if (e.total) {
+          const progressRatio = e.loaded / e.total
+          // Calculate actual bytes of the original file represented by this progress
+          const actualBytesLoaded = progressRatio * chunkBlob.size
+          updateGlobalProgress(i, actualBytesLoaded)
         }
       }
     })
     
-    parts.push({
+    // Ensure 100% for this chunk is recorded
+    updateGlobalProgress(i, chunkBlob.size)
+
+    return {
       etag: chunkRes.data.etag,
       partNumber: chunkRes.data.partNumber
-    })
-    
-    uploadedBytes += chunkBlob.size
-    
-    if (onProgress) {
-      const percent = (uploadedBytes / file.size) * 100
-      onProgress(percent, uploadedBytes, file.size)
     }
   }
+
+  // Queue Management
+  const results: { etag: string; partNumber: number }[] = []
+  const activePromises: Set<Promise<void>> = new Set()
+
+  for (let i = 0; i < totalChunks; i++) {
+    // Create a wrapper that removes itself from the active set upon completion
+    const promise = uploadChunk(i).then((part) => {
+      results.push(part)
+    })
+    
+    // Add to set with cleanup logic attached
+    const trackedPromise = promise.then(() => {
+        activePromises.delete(trackedPromise)
+    })
+    
+    activePromises.add(trackedPromise)
+
+    if (activePromises.size >= MAX_CONCURRENT_UPLOADS) {
+      await Promise.race(activePromises)
+    }
+  }
+
+  await Promise.all(activePromises)
+  
+  // Sort parts to ensure correct order
+  results.sort((a, b) => a.partNumber - b.partNumber)
 
   // * 5. Complete Upload
   const completeBody = {
     uploadToken,
-    parts
+    parts: results
   }
   
   const completeRes = await axios.post(`${API_URL}/api/v1/upload/complete`, completeBody)
