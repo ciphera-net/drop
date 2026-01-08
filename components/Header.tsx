@@ -3,12 +3,45 @@
 import Link from 'next/link'
 import UserMenu from './UserMenu'
 import { useAuth } from '@/lib/auth/context'
+import { useState, useEffect, useRef } from 'react'
 
 export default function Header() {
   const { user, loading } = useAuth()
+  const [isVisible, setIsVisible] = useState(true)
+  const lastScrollY = useRef(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      
+      // Always show when near top to avoid weird behavior with bounce scroll
+      if (currentScrollY < 10) {
+        setIsVisible(true)
+        lastScrollY.current = currentScrollY
+        return
+      }
+
+      if (currentScrollY > lastScrollY.current) {
+        // Scrolling down
+        setIsVisible(false)
+      } else {
+        // Scrolling up
+        setIsVisible(true)
+      }
+      
+      lastScrollY.current = currentScrollY
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 sm:px-6 pt-4 sm:pt-6">
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 flex justify-center px-4 sm:px-6 pt-4 sm:pt-6 transition-transform duration-300 ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}
+    >
       <div className="flex w-full max-w-6xl items-center justify-between rounded-2xl border border-neutral-200/60 bg-white/70 px-4 sm:px-8 py-3.5 shadow-xl shadow-neutral-500/10 backdrop-blur-2xl transition-all duration-300 supports-[backdrop-filter]:bg-white/50 hover:shadow-2xl hover:shadow-neutral-500/15">
         {/* * Logo Section */}
         <Link 
