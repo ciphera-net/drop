@@ -108,11 +108,11 @@ export default function Captcha({ onVerify, className = '' }: CaptchaProps) {
                         checked={false} 
                         onChange={verifyHuman}
                         disabled={loading || verifying || !challenge}
-                        className="w-5 h-5 rounded border-neutral-300 text-brand-orange focus:ring-brand-orange cursor-pointer disabled:opacity-50"
+                        className="w-6 h-6 rounded border-neutral-300 text-brand-orange focus:ring-brand-orange cursor-pointer disabled:opacity-50"
                     />
                     {(loading || verifying) && (
                         <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded z-10">
-                            <div className="w-4 h-4 border-2 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-5 h-5 border-2 border-brand-orange border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     )}
                  </div>
