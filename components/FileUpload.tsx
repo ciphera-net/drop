@@ -118,7 +118,10 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
     }
 
     // Require captcha for anonymous uploads (unless it's a request upload)
-    if (!user && !requestId && !captchaSolution && !captchaToken) {
+    // * PoW captcha uses token, traditional captcha uses id + solution
+    const hasCaptchaToken = captchaToken && captchaToken.trim() !== ''
+    const hasCaptchaSolution = captchaId && captchaSolution && captchaId.trim() !== '' && captchaSolution.trim() !== ''
+    if (!user && !requestId && !hasCaptchaToken && !hasCaptchaSolution) {
       setError('Please complete the security check')
       return
     }
@@ -244,7 +247,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
       setUploading(false)
       setProgress(0)
     }
-  }, [files, expirationMinutes, password, downloadLimit, oneTimeDownload, onUploadComplete, requestId, requestKey, user, captchaId, captchaSolution])
+  }, [files, expirationMinutes, password, downloadLimit, oneTimeDownload, onUploadComplete, requestId, requestKey, user, captchaId, captchaSolution, captchaToken])
 
   return (
     <div className={`w-full max-w-md mx-auto ${files.length > 0 ? 'space-y-6' : ''}`}>
