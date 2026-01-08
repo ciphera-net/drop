@@ -13,7 +13,7 @@ export interface FileRequest {
 
 export interface UploadRequest {
   file: File
-  encryptedData: ArrayBuffer
+  encryptedData?: ArrayBuffer
   encryptedFilename: string
   iv: Uint8Array
   fileSize?: number
@@ -22,6 +22,7 @@ export interface UploadRequest {
   password?: string
   downloadLimit?: number
   oneTimeDownload?: boolean
+  chunkSize?: number
   
   // Captcha
   captcha_id?: string
@@ -72,6 +73,7 @@ export interface DownloadResponse {
   downloadCount: number
   downloadLimit?: number
   oneTimeDownload?: boolean
+  chunkSize?: number
 }
 
 export interface ErrorResponse {

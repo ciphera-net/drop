@@ -4,8 +4,9 @@ import { useState, useCallback, useRef } from 'react'
 import JSZip from 'jszip'
 import { toast } from 'sonner'
 import { encryptFile, encryptString, arrayBufferToBase64 } from '../lib/crypto/encryption'
-import { encodeKeyForSharing, importEncryptionKey } from '../lib/crypto/key-management'
+import { encodeKeyForSharing, importEncryptionKey, generateEncryptionKey } from '../lib/crypto/key-management'
 import { uploadFile, uploadToRequest } from '../lib/api/upload'
+import { uploadFileChunked } from '../lib/api/chunked'
 import type { UploadRequest } from '../lib/types/api'
 import { MAX_FILE_SIZE } from '../lib/constants'
 import { useAuth } from '../lib/auth/context'
@@ -133,6 +134,8 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
     setError(null)
     setProgress(0)
     setUploadSpeed('')
+    
+    let shareUrl = '' // Initialize variable
 
     try {
       let fileToUpload: File
@@ -159,71 +162,118 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
         throw new Error(`File ${fileToUpload.name} is too large. Max size is 5GB.`)
       }
 
-      // * Prepare Encryption Key
-      let encryptionKey
-      if (requestKey) {
-        // * Import provided key (Uint8Array) to CryptoKey
-        const cryptoKey = await importEncryptionKey(requestKey)
-        encryptionKey = { key: cryptoKey, raw: requestKey }
-      }
-      
-      // * Encrypt file
-      const { encrypted, iv, key } = await encryptFile(fileToUpload, encryptionKey)
-      setEncrypting(false) // Encryption done, start upload
+      // * Check if we should use Chunked Upload (>100MB)
+      // * Currently only supported for direct uploads, not requests (TODO)
+      if (fileToUpload.size > 100 * 1024 * 1024 && !requestId) {
+        // * Use Chunked Upload Strategy
+        const metadata = {
+          file: fileToUpload,
+          expirationMinutes,
+          password: password || undefined,
+          downloadLimit: downloadLimit || undefined,
+          oneTimeDownload,
+          captcha_id: !user ? captchaId : undefined,
+          captcha_solution: !user ? captchaSolution : undefined,
+          captcha_token: !user ? captchaToken : undefined,
+        }
 
-      // * Encrypt filename
-      const encryptedFilenameBuffer = await encryptString(
-        fileToUpload.name,
-        key.key,
-        iv
-      )
-      const encryptedFilename = arrayBufferToBase64(encryptedFilenameBuffer)
-
-      // * Prepare upload request
-      const uploadRequest: UploadRequest = {
-        file: fileToUpload,
-        encryptedData: encrypted,
-        encryptedFilename,
-        iv,
-        expirationMinutes: !requestId ? expirationMinutes : undefined,
-        password: !requestId ? (password || undefined) : undefined,
-        downloadLimit: !requestId ? (downloadLimit || undefined) : undefined,
-        oneTimeDownload: !requestId ? oneTimeDownload : undefined,
-        captcha_id: !user && !requestId ? captchaId : undefined,
-        captcha_solution: !user && !requestId ? captchaSolution : undefined,
-        captcha_token: !user && !requestId ? captchaToken : undefined,
-      }
-
-      // * Upload to backend
-      lastUploadRef.current = { loaded: 0, time: Date.now() }
-      
-      const onProgressCallback = (progress: number, loaded: number, total: number) => {
-        const now = Date.now()
-        const timeDiff = now - lastUploadRef.current.time
+        const response = await uploadFileChunked(
+          fileToUpload,
+          requestKey || null,
+          metadata,
+          (progress, loaded, total) => {
+             // Update progress
+             const now = Date.now()
+             const timeDiff = now - lastUploadRef.current.time
+             
+             if (timeDiff > 500) {
+               const loadedDiff = loaded - lastUploadRef.current.loaded
+               // Avoid negative speed if chunk reset
+               if (loadedDiff > 0) {
+                   const speedBytesPerSecond = (loadedDiff / timeDiff) * 1000
+                   setUploadSpeed(formatBytes(speedBytesPerSecond) + '/s')
+               }
+               lastUploadRef.current = { loaded, time: now }
+             }
+             setProgress(progress)
+          }
+        )
         
-        // Update speed every 500ms
-        if (timeDiff > 500) {
-          const loadedDiff = loaded - lastUploadRef.current.loaded
-          const speedBytesPerSecond = (loadedDiff / timeDiff) * 1000
-          setUploadSpeed(formatBytes(speedBytesPerSecond) + '/s')
-          
-          lastUploadRef.current = { loaded, time: now }
+        // shareUrl is returned fully constructed
+        shareUrl = response.shareUrl
+        setEncrypting(false) // Just in case
+        
+      } else {
+        // * Standard Upload Strategy
+        let shareId: string | undefined = undefined // Define in outer scope
+        
+        // * Prepare Encryption Key
+        let encryptionKey
+        if (requestKey) {
+          // * Import provided key (Uint8Array) to CryptoKey
+          const cryptoKey = await importEncryptionKey(requestKey)
+          encryptionKey = { key: cryptoKey, raw: requestKey }
         }
         
-        setProgress(progress)
-      }
+        // * Encrypt file
+        const { encrypted, iv, key } = await encryptFile(fileToUpload, encryptionKey)
+        setEncrypting(false) // Encryption done, start upload
 
-      let shareUrl
-      if (requestId) {
-        // * Upload to Request
-        await uploadToRequest(requestId, uploadRequest, onProgressCallback)
-        shareUrl = 'sent' // Special flag or just indicate success
-      } else {
-        // * Normal Upload
-        const response = await uploadFile(uploadRequest, onProgressCallback)
-        // * Generate share URL with encryption key
-        const encodedKey = encodeKeyForSharing(key.raw)
-        shareUrl = `${window.location.origin}/${response.shareId}#${encodedKey}`
+        // * Encrypt filename
+        const encryptedFilenameBuffer = await encryptString(
+          fileToUpload.name,
+          key.key,
+          iv
+        )
+        const encryptedFilename = arrayBufferToBase64(encryptedFilenameBuffer)
+
+        // * Prepare upload request
+        const uploadRequest: UploadRequest = {
+          file: fileToUpload,
+          encryptedData: encrypted,
+          encryptedFilename,
+          iv,
+          expirationMinutes: !requestId ? expirationMinutes : undefined,
+          password: !requestId ? (password || undefined) : undefined,
+          downloadLimit: !requestId ? (downloadLimit || undefined) : undefined,
+          oneTimeDownload: !requestId ? oneTimeDownload : undefined,
+          captcha_id: !user && !requestId ? captchaId : undefined,
+          captcha_solution: !user && !requestId ? captchaSolution : undefined,
+          captcha_token: !user && !requestId ? captchaToken : undefined,
+        }
+
+        // * Upload to backend
+        lastUploadRef.current = { loaded: 0, time: Date.now() }
+        
+        const onProgressCallback = (progress: number, loaded: number, total: number) => {
+          const now = Date.now()
+          const timeDiff = now - lastUploadRef.current.time
+          
+          // Update speed every 500ms
+          if (timeDiff > 500) {
+            const loadedDiff = loaded - lastUploadRef.current.loaded
+            const speedBytesPerSecond = (loadedDiff / timeDiff) * 1000
+            setUploadSpeed(formatBytes(speedBytesPerSecond) + '/s')
+            
+            lastUploadRef.current = { loaded, time: now }
+          }
+          
+          setProgress(progress)
+        }
+
+        if (requestId) {
+          // * Upload to Request
+          await uploadToRequest(requestId, uploadRequest, onProgressCallback)
+          shareUrl = 'sent' // Special flag or just indicate success
+        } else {
+          // * Normal Upload
+          const response = await uploadFile(uploadRequest, onProgressCallback)
+          shareId = response.shareId // Store ID
+          
+          // * Generate share URL with encryption key
+          const encodedKey = encodeKeyForSharing(key.raw)
+          shareUrl = `${window.location.origin}/${response.shareId}#${encodedKey}`
+        }
       }
 
       setProgress(100)

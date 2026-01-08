@@ -49,5 +49,6 @@ export async function downloadFile(
     downloadCount: data.downloadCount,
     downloadLimit: data.downloadLimit,
     oneTimeDownload: data.oneTimeDownload,
+    chunkSize: data.chunkSize,
   }
 }

@@ -86,7 +86,8 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
       const { decrypted } = await decryptFile(
         response.encryptedData,
         decodedKey,
-        new Uint8Array(response.iv)
+        new Uint8Array(response.iv),
+        response.chunkSize
       )
 
       // * Decrypt filename
