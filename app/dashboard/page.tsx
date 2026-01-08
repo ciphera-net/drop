@@ -7,6 +7,7 @@ import apiRequest from '@/lib/api/client'
 import { FileShare } from '@/lib/types/api'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/context'
+import { formatBytes } from '@/lib/utils/format'
 
 export default function DashboardPage() {
   const [files, setFiles] = useState<FileShare[]>([])
@@ -51,14 +52,6 @@ export default function DashboardPage() {
       console.error('Failed to delete file:', err)
       toast.error('Failed to delete file')
     }
-  }
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
   if (authLoading || loadingFiles) {

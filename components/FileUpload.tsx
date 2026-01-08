@@ -10,6 +10,7 @@ import { uploadFileChunked } from '../lib/api/chunked'
 import type { UploadRequest } from '../lib/types/api'
 import { MAX_FILE_SIZE } from '../lib/constants'
 import { useAuth } from '../lib/auth/context'
+import { formatBytes } from '../lib/utils/format'
 
 import PasswordInput from './PasswordInput'
 import Captcha from './Captcha'
@@ -82,15 +83,6 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
       fileInputRef.current.value = ''
     }
   }, [])
-
-  const formatBytes = (bytes: number, decimals = 2) => {
-    if (!+bytes) return '0 Bytes'
-    const k = 1024
-    const dm = decimals < 0 ? 0 : decimals
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
-  }
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()

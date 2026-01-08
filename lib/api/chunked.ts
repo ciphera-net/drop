@@ -111,7 +111,12 @@ export async function uploadFileChunked(
 
     const chunkRes = await axios.post<UploadPartResponse>(`${API_URL}/api/v1/upload/part`, formData, {
       onUploadProgress: (e) => {
-        // Optional: granular progress
+        if (onProgress && e.total) {
+          const chunkProgress = (e.loaded / e.total) * chunkBlob.size
+          const currentTotal = uploadedBytes + chunkProgress
+          const percent = Math.round((currentTotal / file.size) * 100)
+          onProgress(percent, currentTotal, file.size)
+        }
       }
     })
     
