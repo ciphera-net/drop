@@ -126,10 +126,6 @@ export default function RequestPage() {
         
         {/* Header Section */}
         <div className="text-center">
-          <div className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-600 mb-2">
-            <span className="mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
-            Secure File Request
-          </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-neutral-900 mb-4">
             {requestDetails.title || 'Send Files Securely'}
           </h1>
