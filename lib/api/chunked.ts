@@ -11,7 +11,32 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 // 50MB chunks
 export const CHUNK_SIZE = 50 * 1024 * 1024 
-const MAX_CONCURRENT_UPLOADS = 3 // * Limit parallel uploads to prevent memory issues
+const MAX_CONCURRENT_UPLOADS = 5 // * Increased from 3 to 5 to maximize bandwidth
+
+// * Simple P-Limit implementation to manage concurrency queues
+const pLimit = (concurrency: number) => {
+  const queue: (() => void)[] = [];
+  let activeCount = 0;
+
+  const next = () => {
+    activeCount--;
+    if (queue.length > 0) {
+      queue.shift()!();
+    }
+  };
+
+  return async <T>(fn: () => Promise<T>): Promise<T> => {
+    if (activeCount >= concurrency) {
+      await new Promise<void>(resolve => queue.push(resolve));
+    }
+    activeCount++;
+    try {
+      return await fn();
+    } finally {
+      next();
+    }
+  };
+};
 
 interface InitUploadResponse {
   uploadId: string
@@ -85,11 +110,12 @@ export async function uploadFileChunked(
   
   const { uploadToken, uploadId, shareId } = initRes.data
 
-  // * 4. Parallel Chunk Upload
+  // * 4. Pipelined Chunk Upload
+  // We separate "Preparation" (Read+Encrypt) from "Upload" (Network)
+  // This allows us to prepare the next chunk while the previous one is uploading.
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
   const chunkProgress = new Array(totalChunks).fill(0)
   
-  // Helper to safely update progress across concurrent uploads
   const updateGlobalProgress = (chunkIndex: number, loaded: number) => {
     if (!onProgress) return
     chunkProgress[chunkIndex] = loaded
@@ -98,68 +124,59 @@ export async function uploadFileChunked(
     onProgress(percent, totalLoaded, file.size)
   }
 
-  // Define the upload task for a single chunk
-  const uploadChunk = async (i: number) => {
-    const start = i * CHUNK_SIZE
-    const end = Math.min(start + CHUNK_SIZE, file.size)
-    const chunkBlob = file.slice(start, end)
-    
-    // Read & Encrypt
-    const chunkArrayBuffer = await chunkBlob.arrayBuffer()
-    const encryptedChunk = await encryptChunk(chunkArrayBuffer, keyPair.key)
-    
-    // Upload Part
-    const partNumber = i + 1
-    const formData = new FormData()
-    formData.append('uploadToken', uploadToken)
-    formData.append('partNumber', partNumber.toString())
-    // Create a Blob from the encrypted chunk
-    const encryptedBlob = new Blob([encryptedChunk], { type: 'application/octet-stream' })
-    formData.append('file', encryptedBlob)
+  // Limiters
+  const uploadLimit = pLimit(MAX_CONCURRENT_UPLOADS);
+  const prepareLimit = pLimit(MAX_CONCURRENT_UPLOADS + 1); // Allow 1 chunk to be pre-prepared
 
-    const chunkRes = await axios.post<UploadPartResponse>(`${API_URL}/api/v1/upload/part`, formData, {
-      onUploadProgress: (e) => {
-        if (e.total) {
-          const progressRatio = e.loaded / e.total
-          // Calculate actual bytes of the original file represented by this progress
-          const actualBytesLoaded = progressRatio * chunkBlob.size
-          updateGlobalProgress(i, actualBytesLoaded)
-        }
-      }
-    })
-    
-    // Ensure 100% for this chunk is recorded
-    updateGlobalProgress(i, chunkBlob.size)
-
-    return {
-      etag: chunkRes.data.etag,
-      partNumber: chunkRes.data.partNumber
-    }
-  }
-
-  // Queue Management
-  const results: { etag: string; partNumber: number }[] = []
-  const activePromises: Set<Promise<void>> = new Set()
+  const tasks: Promise<{ etag: string; partNumber: number }>[] = [];
 
   for (let i = 0; i < totalChunks; i++) {
-    // Create a wrapper that removes itself from the active set upon completion
-    const promise = uploadChunk(i).then((part) => {
-      results.push(part)
-    })
-    
-    // Add to set with cleanup logic attached
-    const trackedPromise = promise.then(() => {
-        activePromises.delete(trackedPromise)
-    })
-    
-    activePromises.add(trackedPromise)
+    // Schedule the entire pipeline for this chunk
+    const task = prepareLimit(async () => {
+      // 1. Prepare (Read & Encrypt)
+      // This runs as soon as there is space in memory (controlled by prepareLimit)
+      const start = i * CHUNK_SIZE
+      const end = Math.min(start + CHUNK_SIZE, file.size)
+      const chunkBlob = file.slice(start, end)
+      
+      const chunkArrayBuffer = await chunkBlob.arrayBuffer()
+      const encryptedChunk = await encryptChunk(chunkArrayBuffer, keyPair.key)
+      const encryptedBlob = new Blob([encryptedChunk], { type: 'application/octet-stream' })
+      
+      // 2. Upload
+      // This waits until there is a network slot (controlled by uploadLimit)
+      return uploadLimit(async () => {
+        const partNumber = i + 1
+        const formData = new FormData()
+        formData.append('uploadToken', uploadToken)
+        formData.append('partNumber', partNumber.toString())
+        formData.append('file', encryptedBlob)
 
-    if (activePromises.size >= MAX_CONCURRENT_UPLOADS) {
-      await Promise.race(activePromises)
-    }
+        const chunkRes = await axios.post<UploadPartResponse>(`${API_URL}/api/v1/upload/part`, formData, {
+          onUploadProgress: (e) => {
+            if (e.total) {
+              const progressRatio = e.loaded / e.total
+              const actualBytesLoaded = progressRatio * chunkBlob.size
+              updateGlobalProgress(i, actualBytesLoaded)
+            }
+          }
+        })
+        
+        // Ensure 100% for this chunk is recorded
+        updateGlobalProgress(i, chunkBlob.size)
+
+        return {
+          etag: chunkRes.data.etag,
+          partNumber: chunkRes.data.partNumber
+        }
+      })
+    })
+
+    tasks.push(task)
   }
 
-  await Promise.all(activePromises)
+  // Wait for all
+  const results = await Promise.all(tasks)
   
   // Sort parts to ensure correct order
   results.sort((a, b) => a.partNumber - b.partNumber)
