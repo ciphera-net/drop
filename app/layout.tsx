@@ -1,6 +1,7 @@
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { AuthProvider } from '@/lib/auth/context'
+import { Toaster } from 'sonner'
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import '../styles/globals.css'
@@ -39,6 +40,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <Toaster position="top-center" richColors closeButton />
         </AuthProvider>
       </body>
     </html>

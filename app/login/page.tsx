@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { generatePKCE, generateRandomString } from '@/lib/crypto/pkce'
 
 export default function LoginPage() {
@@ -39,6 +40,7 @@ export default function LoginPage() {
       window.location.href = `${authUrl}/oauth/authorize?${params.toString()}`
     } catch (err) {
       console.error('Failed to initialize login', err)
+      toast.error('Failed to initialize login')
       setLoading(false)
     }
   }

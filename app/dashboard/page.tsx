@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import apiRequest from '@/lib/api/client'
 import { FileShare } from '@/lib/types/api'
 import Link from 'next/link'
@@ -45,9 +46,10 @@ export default function DashboardPage() {
     try {
       await apiRequest(`/files/${shareId}`, { method: 'DELETE' })
       setFiles(files.filter(f => f.share_id !== shareId))
+      toast.success('File deleted successfully')
     } catch (err) {
       console.error('Failed to delete file:', err)
-      alert('Failed to delete file')
+      toast.error('Failed to delete file')
     }
   }
 

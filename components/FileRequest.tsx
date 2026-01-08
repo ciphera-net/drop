@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import apiRequest from '../lib/api/client'
 import { CreateRequestResponse, CreateRequestParams } from '../lib/types/api'
 import { generateEncryptionKey, encodeKeyForSharing, generateIV } from '../lib/crypto/key-management'
@@ -70,7 +71,9 @@ export default function FileRequest({ onRequestCreated }: FileRequestProps) {
       }
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create request')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create request'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

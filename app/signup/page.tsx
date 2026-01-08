@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import apiRequest from '@/lib/api/client'
 import { deriveAuthKey } from '@/lib/crypto/password'
 
@@ -30,7 +31,9 @@ export default function SignupPage() {
 
       setSuccess(true)
     } catch (err: any) {
-      setError(err.message || 'Failed to create account')
+      const msg = err.message || 'Failed to create account'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

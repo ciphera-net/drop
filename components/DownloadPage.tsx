@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { downloadFile } from '../lib/api/download'
 import { getFileMetadata } from '../lib/api/metadata'
 import { decryptFile, decryptString, base64ToArrayBuffer } from '../lib/crypto/encryption'
@@ -97,8 +98,12 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+      
+      toast.success('File decrypted and downloaded successfully')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Download failed')
+      const errorMessage = err instanceof Error ? err.message : 'Download failed'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setDownloading(false)
     }

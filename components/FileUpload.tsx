@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import JSZip from 'jszip'
+import { toast } from 'sonner'
 import { encryptFile, encryptString, arrayBufferToBase64 } from '../lib/crypto/encryption'
 import { encodeKeyForSharing, importEncryptionKey } from '../lib/crypto/key-management'
 import { uploadFile, uploadToRequest } from '../lib/api/upload'
@@ -227,7 +228,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
       } else if (!requestId) {
         // * Copy to clipboard for normal shares
         await navigator.clipboard.writeText(shareUrl)
-        alert('Share link copied to clipboard!')
+        toast.success('Share link copied to clipboard!')
       }
 
       // * Reset form
@@ -240,7 +241,9 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
         setCaptchaToken('')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
+      const errorMessage = err instanceof Error ? err.message : 'Upload failed'
+      setError(errorMessage)
+      toast.error(errorMessage)
       setCaptchaSolution('') // Reset captcha on error too
       setCaptchaToken('')
     } finally {

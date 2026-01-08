@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface ShareLinkProps {
   shareUrl: string
@@ -15,9 +16,11 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
     try {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
+      toast.success('Link copied to clipboard')
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
+      toast.error('Failed to copy link')
     }
   }
 
