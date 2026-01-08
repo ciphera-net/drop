@@ -114,7 +114,7 @@ export async function uploadFileChunked(
         if (onProgress && e.total) {
           const chunkProgress = (e.loaded / e.total) * chunkBlob.size
           const currentTotal = uploadedBytes + chunkProgress
-          const percent = Math.round((currentTotal / file.size) * 100)
+          const percent = (currentTotal / file.size) * 100
           onProgress(percent, currentTotal, file.size)
         }
       }
@@ -128,7 +128,7 @@ export async function uploadFileChunked(
     uploadedBytes += chunkBlob.size
     
     if (onProgress) {
-      const percent = Math.round((uploadedBytes / file.size) * 100)
+      const percent = (uploadedBytes / file.size) * 100
       onProgress(percent, uploadedBytes, file.size)
     }
   }

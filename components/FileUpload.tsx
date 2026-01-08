@@ -143,7 +143,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
         
         // * Update progress to indicate compression
         const content = await zip.generateAsync({ type: 'blob' }, (metadata) => {
-            setProgress(Math.round(metadata.percent))
+            setProgress(metadata.percent)
         })
         fileToUpload = new File([content], 'archive.zip', { type: 'application/zip' })
       } else {
@@ -545,7 +545,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
                    </>
                 )}
               </span>
-              <span>{progress}%</span>
+              <span>{Math.round(progress)}%</span>
             </div>
             
             <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-full h-2 overflow-hidden">

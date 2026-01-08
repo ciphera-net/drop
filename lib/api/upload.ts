@@ -48,7 +48,7 @@ export async function uploadFile(
       },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          const percentCompleted = (progressEvent.loaded * 100) / progressEvent.total
           onProgress(percentCompleted, progressEvent.loaded, progressEvent.total)
         }
       }
@@ -98,7 +98,7 @@ export async function uploadToRequest(
       },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          const percentCompleted = (progressEvent.loaded * 100) / progressEvent.total
           onProgress(percentCompleted, progressEvent.loaded, progressEvent.total)
         }
       }
@@ -243,7 +243,7 @@ export async function uploadFileChunked(
         const chunkRatio = loaded / total
         const currentChunkProgress = chunkBlob.size * chunkRatio
         const currentTotal = totalUploaded + currentChunkProgress
-        const percent = Math.round((currentTotal / file.size) * 100)
+        const percent = (currentTotal / file.size) * 100
         onProgress(percent, currentTotal, file.size)
       }
     })
@@ -253,7 +253,7 @@ export async function uploadFileChunked(
     totalUploaded += chunkBlob.size
     if (onProgress) {
       // * Calculate percentage based on original file size
-      const percent = Math.round((totalUploaded / file.size) * 100)
+      const percent = (totalUploaded / file.size) * 100
       onProgress(percent, totalUploaded, file.size)
     }
   }
