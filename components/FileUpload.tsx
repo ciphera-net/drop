@@ -21,9 +21,14 @@ interface FileUploadProps {
   requestKey?: Uint8Array
 }
 
+interface FileWithRelativePath extends File {
+  webkitRelativePath: string
+}
+
 export default function FileUpload({ onUploadComplete, requestId, requestKey }: FileUploadProps) {
   const { user } = useAuth()
   const [files, setFiles] = useState<File[]>([])
+  const [folderMode, setFolderMode] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [encrypting, setEncrypting] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -60,6 +65,12 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
     const validFiles: File[] = []
     let errorMsg: string | null = null
 
+    // Check if we are in folder mode based on webkitRelativePath
+    const isFolderUpload = fileArray.some(f => (f as FileWithRelativePath).webkitRelativePath?.includes('/'))
+    if (isFolderUpload) {
+      setFolderMode(true)
+    }
+
     fileArray.forEach(file => {
       if (file.size > MAX_FILE_SIZE) {
         errorMsg = `File ${file.name} is too large. Max size is 5GB.`
@@ -81,6 +92,16 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
     // Reset input value to allow selecting the same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
+    }
+  }, [])
+
+  // * Add webkitdirectory attribute support
+  useEffect(() => {
+    if (fileInputRef.current) {
+      // @ts-ignore - non-standard attribute but supported in most browsers
+      fileInputRef.current.setAttribute('webkitdirectory', '')
+      // @ts-ignore
+      fileInputRef.current.setAttribute('directory', '')
     }
   }, [])
 
@@ -115,8 +136,75 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    handleFileSelect(e.dataTransfer.files)
+    
+    // * Handle folder drop recursively if possible, otherwise flat files
+    const items = e.dataTransfer.items
+    if (items) {
+      const entryPromises: Promise<File[]>[] = []
+      
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        const entry = item.webkitGetAsEntry()
+        
+        if (entry) {
+          entryPromises.push(scanFiles(entry))
+        } else if (item.kind === 'file') {
+          const file = item.getAsFile()
+          if (file) entryPromises.push(Promise.resolve([file]))
+        }
+      }
+      
+      Promise.all(entryPromises).then(results => {
+        const flatFiles = results.flat()
+        // Check if any file has path structure indicating folder drop
+        const isFolder = flatFiles.some(f => (f as FileWithRelativePath).webkitRelativePath?.includes('/'))
+        if (isFolder) setFolderMode(true)
+        
+        handleFileSelect(createFileList(flatFiles))
+      })
+    } else {
+       handleFileSelect(e.dataTransfer.files)
+    }
   }, [handleFileSelect])
+
+  // Helper to traverse directories
+  const scanFiles = (entry: any): Promise<File[]> => {
+    return new Promise((resolve) => {
+       if (entry.isFile) {
+         entry.file((file: File) => {
+            // Monkey-patch webkitRelativePath for zip structure
+            Object.defineProperty(file, 'webkitRelativePath', {
+               value: entry.fullPath.substring(1) // remove leading slash
+            })
+            resolve([file])
+         })
+       } else if (entry.isDirectory) {
+         const reader = entry.createReader()
+         const readEntries = () => {
+           reader.readEntries((entries: any[]) => {
+             if (entries.length === 0) {
+               resolve([])
+             } else {
+               const promises = entries.map(scanFiles)
+               Promise.all(promises).then(results => {
+                 resolve(results.flat())
+               })
+             }
+           })
+         }
+         readEntries()
+       } else {
+         resolve([])
+       }
+    })
+  }
+
+  // Helper to reconstruct FileList
+  const createFileList = (files: File[]) => {
+    const dataTransfer = new DataTransfer()
+    files.forEach(file => dataTransfer.items.add(file))
+    return dataTransfer.files
+  }
 
   const removeFile = useCallback((index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index))
@@ -156,18 +244,25 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
 
       // * Check for zip creation
       // * If uploading to request, we might want to zip as well? Yes, consistent behavior.
-      if (files.length > 1) {
-        // * Create zip for multiple files
+      if (files.length > 1 || folderMode) {
+        // * Create zip for multiple files or folder
         const zip = new JSZip()
+        
         files.forEach((file) => {
-          zip.file(file.name, file)
+          const relativePath = (file as FileWithRelativePath).webkitRelativePath || file.name
+          zip.file(relativePath, file)
         })
         
         // * Update progress to indicate compression
         const content = await zip.generateAsync({ type: 'blob' }, (metadata) => {
             setProgress(metadata.percent)
         })
-        fileToUpload = new File([content], 'archive.zip', { type: 'application/zip' })
+        
+        const zipName = folderMode && files[0] && (files[0] as FileWithRelativePath).webkitRelativePath
+          ? `${(files[0] as FileWithRelativePath).webkitRelativePath.split('/')[0]}.zip`
+          : 'archive.zip'
+          
+        fileToUpload = new File([content], zipName, { type: 'application/zip' })
       } else {
         fileToUpload = files[0]
       }
@@ -355,10 +450,10 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
               </div>
               <div className="space-y-2">
                 <p className="text-xl font-semibold text-neutral-700 dark:text-neutral-200 group-hover:text-brand-orange transition-colors">
-                  {requestId ? 'Upload Requested Files' : 'Click to upload or drag and drop'}
+                  {requestId ? 'Upload Requested Files' : 'Click to upload files or folders'}
                 </p>
                 <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-xs mx-auto">
-                  Files are encrypted client-side before being uploaded. Maximum file size 5GB.
+                  Drag and drop to upload. Encrypted client-side. Max size 5GB.
                 </p>
               </div>
               <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500 bg-white/50 dark:bg-neutral-800/50 px-3 py-1.5 rounded-full border border-neutral-100 dark:border-neutral-800">
@@ -376,19 +471,25 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
       {files.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-medium text-neutral-900 dark:text-white">Selected files</h3>
+            <h3 className="font-medium text-neutral-900 dark:text-white">
+               {folderMode ? 'Selected Folder Content' : 'Selected files'}
+            </h3>
             <div className="flex items-center gap-3">
               <span className="text-xs text-neutral-500 dark:text-neutral-400">{files.length} file{files.length !== 1 ? 's' : ''}</span>
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                   setFiles([])
+                   setFolderMode(false)
+                   fileInputRef.current?.click()
+                }}
                 disabled={uploading}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand-orange bg-brand-orange/5 dark:bg-brand-orange/10 hover:bg-brand-orange/10 dark:hover:bg-brand-orange/20 rounded-xl transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Add more
+                {folderMode ? 'Replace Folder' : 'Add more'}
               </button>
             </div>
           </div>
@@ -399,13 +500,17 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
             >
               <div className="flex-shrink-0 w-10 h-10 bg-brand-orange/10 rounded-lg flex items-center justify-center mr-4 text-brand-orange">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  {folderMode ? (
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  ) : (
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  )}
                 </svg>
               </div>
               
               <div className="flex-1 min-w-0 mr-4">
                 <p className="text-sm font-medium text-neutral-900 dark:text-white truncate" title={file.name}>
-                  {file.name}
+                  {(file as FileWithRelativePath).webkitRelativePath || file.name}
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   {formatBytes(file.size)}
