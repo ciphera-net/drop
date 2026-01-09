@@ -129,7 +129,7 @@ export default function Captcha({
 
   if (verified) {
       return (
-          <div className={`p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center gap-2 ${className}`}>
+          <div className={`p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 flex items-center gap-2 ${className}`}>
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
@@ -139,7 +139,7 @@ export default function Captcha({
   }
 
   return (
-    <div className={`bg-neutral-50 border border-neutral-200 rounded-lg p-4 ${className}`}>
+    <div className={`bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 ${className}`}>
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
                  <div className="relative flex items-center justify-center">
@@ -148,22 +148,22 @@ export default function Captcha({
                         checked={false} 
                         onChange={verifyHuman}
                         disabled={loading || verifying || !challenge}
-                        className={`w-6 h-6 rounded border-neutral-300 ${brandColorClass} ${borderColorClass} cursor-pointer disabled:opacity-50`}
+                        className={`w-6 h-6 rounded border-neutral-300 dark:border-neutral-600 dark:bg-neutral-800 ${brandColorClass} ${borderColorClass} cursor-pointer disabled:opacity-50`}
                     />
                     {(loading || verifying) && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded z-10">
+                        <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-neutral-800/80 rounded z-10">
                             <div className={`w-5 h-5 border-2 ${borderColorClass} border-t-transparent rounded-full animate-spin`}></div>
                         </div>
                     )}
                  </div>
                  <span 
-                    className={`text-sm font-medium text-neutral-700 mr-3 ${loading || verifying ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                    className={`text-sm font-medium text-neutral-700 dark:text-neutral-200 mr-3 ${loading || verifying ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                     onClick={() => !loading && !verifying && verifyHuman()}
                 >
                      {verifying ? 'Verifying...' : 'I am human'}
                  </span>
             </div>
-            <div className="text-[11px] text-neutral-400 flex flex-col items-end border-l border-neutral-200 pl-3">
+            <div className="text-[11px] text-neutral-400 dark:text-neutral-500 flex flex-col items-end border-l border-neutral-200 dark:border-neutral-700 pl-3">
                 <div className="flex items-center gap-2 opacity-90">
                     <img 
                         src={logoUrl}
@@ -172,7 +172,7 @@ export default function Captcha({
                     />
                     <div className="flex flex-col leading-none">
                         <span className="text-[10px]">Secured by</span>
-                        <span className="font-bold text-neutral-700 text-sm">Ciphera</span>
+                        <span className="font-bold text-neutral-700 dark:text-neutral-200 text-sm">Ciphera</span>
                     </div>
                 </div>
             </div>
