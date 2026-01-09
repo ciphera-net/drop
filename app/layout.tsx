@@ -30,6 +30,13 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  manifest: '/manifest.json',
+  themeColor: '#FF4F00',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Drop',
+  },
 }
 
 export default function RootLayout({

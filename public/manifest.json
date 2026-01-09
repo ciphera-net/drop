@@ -1,0 +1,18 @@
+{
+  "name": "Drop - Privacy-First File Sharing",
+  "short_name": "Drop",
+  "description": "Secure file sharing with end-to-end encryption. We cannot see what you upload.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FF4F00",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/drop_icon_no_margins.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
