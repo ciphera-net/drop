@@ -51,13 +51,11 @@ export default function Header() {
           className="flex items-center gap-3 group relative"
         >
           <div className="relative w-[120px] h-10 sm:h-11 flex items-center justify-start">
-            <Image 
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
               src="/drop_logo_no_margins.png"
               alt="Drop Logo"
-              width={120}
-              height={44}
-              className="w-auto h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              priority
+              className="w-auto h-full object-contain group-hover:scale-105 transition-transform duration-300 dark:invert"
             />
           </div>
         </Link>
