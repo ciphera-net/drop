@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import apiRequest from '@/lib/api/client'
 
@@ -14,6 +14,7 @@ interface AuthContextType {
   loading: boolean
   login: (token: string, refreshToken: string, user: User) => void
   logout: () => void
+  refresh: () => void
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   login: () => {},
   logout: () => {},
+  refresh: () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -65,8 +67,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.refresh()
   }
 
+  // Reload user data from localStorage or API
+  const refresh = useCallback(() => {
+    const savedUser = localStorage.getItem('user')
+    if (savedUser) {
+        try {
+            setUser(JSON.parse(savedUser))
+        } catch (e) {
+            console.error('Failed to parse user data during refresh', e)
+        }
+    }
+    router.refresh()
+  }, [router])
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   )
