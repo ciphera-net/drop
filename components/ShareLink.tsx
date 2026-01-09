@@ -42,26 +42,28 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
           </p>
         </div>
         
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex flex-col gap-3 mb-6">
           <input
             type="text"
             value={shareUrl}
             readOnly
-            className="min-w-0 flex-1 px-4 py-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 text-sm font-mono text-neutral-600 dark:text-neutral-300 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all"
+            className="w-full px-4 py-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 text-sm font-mono text-neutral-600 dark:text-neutral-300 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all text-center"
           />
-          <button
-            onClick={() => setShowQr(!showQr)}
-            className={`p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center ${showQr ? 'bg-neutral-100 dark:bg-neutral-800' : ''}`}
-            title="Show QR Code"
-          >
-            <QrCode className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleCopy}
-            className="btn-secondary whitespace-nowrap !px-6 !py-3 h-[46px] flex items-center"
-          >
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowQr(!showQr)}
+              className={`p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center ${showQr ? 'bg-neutral-100 dark:bg-neutral-800' : ''}`}
+              title="Show QR Code"
+            >
+              <QrCode className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleCopy}
+              className="flex-1 btn-secondary whitespace-nowrap !px-6 !py-3 h-[46px] flex items-center justify-center"
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+          </div>
         </div>
 
         {showQr && (
