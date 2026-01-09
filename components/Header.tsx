@@ -50,14 +50,17 @@ export default function Header() {
           href="/" 
           className="flex items-center gap-3 group relative"
         >
-          <div className="relative w-[120px] h-10 sm:h-11 flex items-center justify-start">
+          <div className="relative w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="/drop_logo_no_margins.png"
+              src="/drop_icon_no_margins.png"
               alt="Drop Logo"
-              className="w-auto h-full object-contain group-hover:scale-105 transition-transform duration-300 dark:invert"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </div>
+          <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white tracking-tight group-hover:text-brand-orange transition-colors duration-300">
+            Drop
+          </span>
         </Link>
 
         {/* * Navigation Links - Hidden on mobile and for logged-in users, visible on larger screens for non-logged-in users */}
