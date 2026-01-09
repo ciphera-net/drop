@@ -6,7 +6,7 @@ const config: Config = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
-    '../ciphera-ui/src/**/*.{js,ts,jsx,tsx,mdx}',
+    './node_modules/@ciphera-net/ui/dist/**/*.{js,mjs}',
   ],
   theme: {
     extend: {

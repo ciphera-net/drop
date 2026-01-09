@@ -1,6 +1,6 @@
 'use client'
 
-import { Header as UIHeader } from '@ciphera/ui'
+import { Header as UIHeader } from '@ciphera-net/ui'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/context'
 

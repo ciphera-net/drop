@@ -1,6 +1,6 @@
 'use client'
 
-import { Footer as UIFooter } from '@ciphera/ui'
+import { Footer as UIFooter } from '@ciphera-net/ui'
 import Link from 'next/link'
 import { useState } from 'react'
 import FeedbackModal from './FeedbackModal'
