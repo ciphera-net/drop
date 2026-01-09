@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import JSZip from 'jszip'
 import { toast } from 'sonner'
 import { encryptFile, encryptString, arrayBufferToBase64 } from '../lib/crypto/encryption'
@@ -83,6 +83,28 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
       fileInputRef.current.value = ''
     }
   }, [])
+
+  // * Handle paste events for file upload
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      // Don't intercept paste if user is typing in an input/textarea
+      if (
+        document.activeElement?.tagName === 'INPUT' || 
+        document.activeElement?.tagName === 'TEXTAREA'
+      ) {
+        return
+      }
+
+      if (e.clipboardData?.files?.length) {
+        e.preventDefault()
+        handleFileSelect(e.clipboardData.files)
+        toast.info('File pasted from clipboard')
+      }
+    }
+
+    window.addEventListener('paste', handlePaste)
+    return () => window.removeEventListener('paste', handlePaste)
+  }, [handleFileSelect])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
