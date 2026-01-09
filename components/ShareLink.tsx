@@ -51,24 +51,24 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
             className="w-full px-4 py-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 text-sm font-mono text-neutral-600 dark:text-neutral-300 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all text-center"
           />
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowQr(!showQr)}
-              className={`p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center ${showQr ? 'bg-neutral-100 dark:bg-neutral-800' : ''}`}
-              title="Show QR Code"
-            >
-              <QrCode className="w-5 h-5" />
-            </button>
-            <button
-              onClick={handleCopy}
+          <button
+            onClick={() => setShowQr(!showQr)}
+            className={`p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center ${showQr ? 'bg-neutral-100 dark:bg-neutral-800' : ''}`}
+            title="Show QR Code"
+          >
+            <QrCode className="w-5 h-5" />
+          </button>
+          <button
+            onClick={handleCopy}
               className="flex-1 btn-secondary whitespace-nowrap !px-6 !py-3 h-[46px] flex items-center justify-center"
-            >
-              {copied ? 'Copied!' : 'Copy Link'}
-            </button>
+          >
+            {copied ? 'Copied!' : 'Copy Link'}
+          </button>
           </div>
         </div>
 
         <AnimatePresence>
-          {showQr && (
+        {showQr && (
             <motion.div
               initial={{ height: 0, opacity: 0, scale: 0.95 }}
               animate={{ height: 'auto', opacity: 1, scale: 1 }}
@@ -77,20 +77,20 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
               className="overflow-hidden"
             >
               <div className="flex flex-col items-center justify-center p-6 mb-6 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
-                  <QRCodeCanvas
-                    value={shareUrl}
-                    size={200}
-                    level={"H"}
-                    includeMargin={true}
-                  />
-                </div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
-                  Scan to open on mobile
-                </p>
-              </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+              <QRCodeCanvas
+                value={shareUrl}
+                size={200}
+                level={"H"}
+                includeMargin={true}
+              />
+            </div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
+              Scan to open on mobile
+            </p>
+          </div>
             </motion.div>
-          )}
+        )}
         </AnimatePresence>
 
         <div className="flex flex-col gap-2 text-xs text-neutral-400 dark:text-neutral-500 border-t border-neutral-100 dark:border-neutral-700 pt-4">
