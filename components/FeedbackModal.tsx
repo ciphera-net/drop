@@ -126,28 +126,30 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                     required
                   />
                   
-                  <div className="flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading || !message.trim()}
-                      className="btn-primary py-2 px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? 'Sending...' : 'Send Feedback'}
-                    </button>
-                  </div>
-                  
-                  <div className="mt-4 flex justify-end">
-                    <Captcha 
-                      onVerify={handleCaptchaVerify}
-                      className="scale-90 origin-right" 
-                    />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4">
+                    <div className="order-2 sm:order-1">
+                      <Captcha 
+                        onVerify={handleCaptchaVerify}
+                        className="w-full sm:w-auto" 
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end gap-3 order-1 sm:order-2">
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-xl transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading || !message.trim()}
+                        className="btn-primary py-2 px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        {loading ? 'Sending...' : 'Send Feedback'}
+                      </button>
+                    </div>
                   </div>
                 </form>
               </div>
