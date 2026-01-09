@@ -43,6 +43,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
   const [oneTimeDownload, setOneTimeDownload] = useState(true)
   const [stripMetadata, setStripMetadata] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const folderInputRef = useRef<HTMLInputElement>(null)
 
   // Captcha State
   const [captchaId, setCaptchaId] = useState('')
@@ -93,18 +94,17 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
     }
     
     // Reset input value to allow selecting the same file again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (folderInputRef.current) folderInputRef.current.value = ''
   }, [])
 
-  // * Add webkitdirectory attribute support
+  // * Configure folder input with webkitdirectory
   useEffect(() => {
-    if (fileInputRef.current) {
-      // @ts-ignore - non-standard attribute but supported in most browsers
-      fileInputRef.current.setAttribute('webkitdirectory', '')
+    if (folderInputRef.current) {
       // @ts-ignore
-      fileInputRef.current.setAttribute('directory', '')
+      folderInputRef.current.setAttribute('webkitdirectory', '')
+      // @ts-ignore
+      folderInputRef.current.setAttribute('directory', '')
     }
   }, [])
 
@@ -470,6 +470,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
 
   return (
     <div className={`w-full max-w-md mx-auto ${files.length > 0 ? 'space-y-6' : ''}`}>
+      {/* Standard File Input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -477,6 +478,17 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
         onChange={(e) => handleFileSelect(e.target.files)}
         className="hidden"
         id="file-input"
+        disabled={uploading}
+      />
+      
+      {/* Folder Input */}
+      <input
+        ref={folderInputRef}
+        type="file"
+        multiple
+        onChange={(e) => handleFileSelect(e.target.files)}
+        className="hidden"
+        id="folder-input"
         disabled={uploading}
       />
 
@@ -499,13 +511,28 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <p className="text-xl font-semibold text-neutral-700 dark:text-neutral-200 group-hover:text-brand-orange transition-colors">
-                  {requestId ? 'Upload Requested Files' : 'Click to upload files or folders'}
+                  {requestId ? 'Upload Requested Files' : 'Click to select files'}
                 </p>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-xs mx-auto">
-                  Drag and drop to upload. Encrypted client-side. Max size 5GB.
-                </p>
+                <div className="flex flex-col gap-1 items-center">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-xs mx-auto">
+                    Drag & drop files or folders here
+                  </p>
+                  {!requestId && (
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        folderInputRef.current?.click();
+                      }}
+                      className="text-xs font-medium text-brand-orange hover:text-brand-orange/80 hover:underline z-10 relative"
+                    >
+                      or select a folder
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500 bg-white/50 dark:bg-neutral-800/50 px-3 py-1.5 rounded-full border border-neutral-100 dark:border-neutral-800">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
