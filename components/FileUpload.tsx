@@ -517,7 +517,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
                 </p>
                 <div className="flex flex-col gap-1 items-center">
                   <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-xs mx-auto">
-                    Drag & drop files or folders here
+                    Drag & drop to upload. Encrypted client-side. Max size 5GB.
                   </p>
                   {!requestId && (
                     <button 
