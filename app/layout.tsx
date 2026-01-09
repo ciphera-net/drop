@@ -14,7 +14,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Drop - Privacy-First File Sharing',
+  title: 'Drop - The Secure Way to Share',
   description: 'Secure file sharing with end-to-end encryption. We cannot see what you upload.',
   keywords: ['file sharing', 'privacy', 'encryption', 'secure', 'ciphera'],
   authors: [{ name: 'Ciphera' }],
