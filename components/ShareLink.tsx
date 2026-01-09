@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { QrCode } from 'lucide-react'
+import { QRCodeCanvas } from 'qrcode.react'
 
 interface ShareLinkProps {
   shareUrl: string
@@ -11,6 +13,7 @@ interface ShareLinkProps {
 
 export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) {
   const [copied, setCopied] = useState(false)
+  const [showQr, setShowQr] = useState(false)
 
   const handleCopy = async () => {
     try {
@@ -47,12 +50,35 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
             className="flex-1 px-4 py-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 text-sm font-mono text-neutral-600 dark:text-neutral-300 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all"
           />
           <button
+            onClick={() => setShowQr(!showQr)}
+            className={`p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center ${showQr ? 'bg-neutral-100 dark:bg-neutral-800' : ''}`}
+            title="Show QR Code"
+          >
+            <QrCode className="w-5 h-5" />
+          </button>
+          <button
             onClick={handleCopy}
             className="btn-secondary whitespace-nowrap !px-6 !py-3 h-[46px] flex items-center"
           >
             {copied ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
+
+        {showQr && (
+          <div className="flex flex-col items-center justify-center p-6 mb-6 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-700 animate-in fade-in slide-in-from-top-2">
+            <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+              <QRCodeCanvas
+                value={shareUrl}
+                size={200}
+                level={"H"}
+                includeMargin={true}
+              />
+            </div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
+              Scan to open on mobile
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2 text-xs text-neutral-400 dark:text-neutral-500 border-t border-neutral-100 dark:border-neutral-700 pt-4">
           <div className="flex items-center gap-2">
