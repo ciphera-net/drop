@@ -19,17 +19,28 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
     setLoading(true)
     
-    // Simulate network request
-    // In a real app, this would POST to an endpoint or webhook (e.g. Discord, Slack, or DB)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // TODO: Implement actual API call
-    console.log('Feedback submitted:', message)
-    
-    toast.success('Thank you for your feedback!')
-    setMessage('')
-    setLoading(false)
-    onClose()
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit')
+      }
+      
+      toast.success('Thank you for your feedback!')
+      setMessage('')
+      onClose()
+    } catch (error) {
+      toast.error('Failed to send feedback. Please try again.')
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
