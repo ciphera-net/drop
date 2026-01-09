@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "cd ../ciphera-ui && npm install && npm run build",
+    "prebuild": "echo 'Skipping prebuild on Vercel'",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
