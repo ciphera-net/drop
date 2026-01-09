@@ -518,8 +518,6 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
       {/* * Drag and drop area */}
       {files.length === 0 && (
         <div
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
           className="group relative aspect-square border-2 border-dashed border-neutral-200 dark:border-neutral-800 hover:border-brand-orange dark:hover:border-brand-orange bg-neutral-50/50 dark:bg-neutral-900/50 hover:bg-brand-orange/5 dark:hover:bg-brand-orange/10 rounded-2xl p-12 text-center transition-all duration-300 ease-in-out cursor-pointer"
         >
           <label htmlFor="file-input" className="cursor-pointer w-full h-full block">
