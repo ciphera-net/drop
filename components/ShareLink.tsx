@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { QrCode } from 'lucide-react'
+import { QrCode, Share2 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useKeyboardShortcuts } from '../lib/hooks/useKeyboardShortcuts'
@@ -26,6 +26,25 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
     } catch (err) {
       console.error('Failed to copy:', err)
       toast.error('Failed to copy link')
+    }
+  }
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title || 'Secure File Transfer',
+          text: 'I sent you a secure encrypted file via Drop.',
+          url: shareUrl,
+        })
+      } catch (err) {
+        // User cancelled or share failed
+        console.log('Share cancelled:', err)
+      }
+    } else {
+      // Fallback to copy if share API not supported (though UI typically hides this button if unsupported, 
+      // keeping it visible for consistency is better UX here with toast)
+      handleCopy()
     }
   }
 
@@ -61,19 +80,26 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
             className="w-full px-4 py-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 text-sm font-mono text-neutral-600 dark:text-neutral-300 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all text-center"
           />
           <div className="flex gap-2">
-          <button
-            onClick={() => setShowQr(!showQr)}
-            className={`p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center ${showQr ? 'bg-neutral-100 dark:bg-neutral-800' : ''}`}
-            title="Show QR Code"
-          >
-            <QrCode className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleCopy}
+            <button
+              onClick={() => setShowQr(!showQr)}
+              className={`p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center ${showQr ? 'bg-neutral-100 dark:bg-neutral-800' : ''}`}
+              title="Show QR Code"
+            >
+              <QrCode className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center sm:hidden"
+              title="Share"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleCopy}
               className="flex-1 btn-secondary whitespace-nowrap !px-6 !py-3 h-[46px] flex items-center justify-center"
-          >
-            {copied ? 'Copied!' : 'Copy Link'}
-          </button>
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
           </div>
         </div>
 
