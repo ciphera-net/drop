@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/context'
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, User, Settings, LayoutDashboard, ChevronDown } from 'lucide-react'
+import { ExitIcon, PersonIcon, GearIcon, DashboardIcon, ChevronDownIcon } from '@radix-ui/react-icons'
 
 export default function UserMenu() {
   const { user, loading, logout } = useAuth()
@@ -38,10 +38,10 @@ export default function UserMenu() {
           className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white p-1 pl-2 pr-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
         >
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-            <User className="h-4 w-4" />
+            <PersonIcon className="h-4 w-4" />
           </div>
           <span className="hidden sm:block max-w-[100px] truncate">{user.email?.split('@')[0]}</span>
-          <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDownIcon className={`h-4 w-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         <AnimatePresence>
@@ -66,7 +66,7 @@ export default function UserMenu() {
                   onClick={() => setIsOpen(false)}
                   className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                 >
-                  <LayoutDashboard className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white" />
+                  <DashboardIcon className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white" />
                   Dashboard
                 </Link>
                 <Link
@@ -74,7 +74,7 @@ export default function UserMenu() {
                   onClick={() => setIsOpen(false)}
                   className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                 >
-                  <Settings className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white" />
+                  <GearIcon className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white" />
                   Settings
                 </Link>
               </div>
@@ -87,7 +87,7 @@ export default function UserMenu() {
                   }}
                   className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                 >
-                  <LogOut className="h-4 w-4 opacity-70" />
+                  <ExitIcon className="h-4 w-4 opacity-70" />
                   Sign Out
                 </button>
               </div>

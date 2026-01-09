@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth/context'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User, Lock, Mail, Save, AlertCircle, X } from 'lucide-react'
+import { PersonIcon, LockClosedIcon, EnvelopeClosedIcon, CheckIcon, ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons'
 import PasswordInput from '@/components/PasswordInput'
 import { toast } from 'sonner'
 import api from '@/lib/api/client'
@@ -132,7 +132,7 @@ export default function ProfileSettings() {
                 : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
             }`}
           >
-            <User className="w-5 h-5" />
+            <PersonIcon className="w-5 h-5" />
             Profile
           </button>
           <button
@@ -143,7 +143,7 @@ export default function ProfileSettings() {
                 : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
             }`}
           >
-            <Lock className="w-5 h-5" />
+            <LockClosedIcon className="w-5 h-5" />
             Security
           </button>
         </nav>
@@ -180,7 +180,7 @@ export default function ProfileSettings() {
                         className="w-full pl-11 pr-4 py-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 focus:bg-white dark:focus:bg-neutral-900 
                         focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none transition-all duration-200 dark:text-white"
                       />
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-500 group-focus-within:text-brand-orange transition-colors" />
+                      <EnvelopeClosedIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-500 group-focus-within:text-brand-orange transition-colors" />
                     </div>
                   </div>
                 </div>
@@ -196,7 +196,7 @@ export default function ProfileSettings() {
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Save className="w-4 h-4" />
+                        <CheckIcon className="w-4 h-4" />
                         Save Changes
                       </>
                     )}
@@ -214,7 +214,7 @@ export default function ProfileSettings() {
 
                 {securityError && (
                   <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl flex items-start gap-3 text-red-600 dark:text-red-400">
-                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                    <ExclamationTriangleIcon className="w-5 h-5 shrink-0 mt-0.5" />
                     <span className="text-sm font-medium">{securityError}</span>
                   </div>
                 )}
@@ -252,7 +252,7 @@ export default function ProfileSettings() {
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Save className="w-4 h-4" />
+                        <CheckIcon className="w-4 h-4" />
                         Update Password
                       </>
                     )}
@@ -286,7 +286,7 @@ export default function ProfileSettings() {
                         }}
                         className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-white"
                       >
-                        <X className="w-5 h-5" />
+                        <Cross2Icon className="w-5 h-5" />
                       </button>
                     </div>
                     

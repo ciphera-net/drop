@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { QrCode, Share2 } from 'lucide-react'
+import { GridIcon, Share2Icon } from '@radix-ui/react-icons'
 import { QRCodeCanvas } from 'qrcode.react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useKeyboardShortcuts } from '../lib/hooks/useKeyboardShortcuts'
@@ -85,14 +85,14 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
               className={`p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center ${showQr ? 'bg-neutral-100 dark:bg-neutral-800' : ''}`}
               title="Show QR Code"
             >
-              <QrCode className="w-5 h-5" />
+              <GridIcon className="w-5 h-5" />
             </button>
             <button
               onClick={handleShare}
               className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400 h-[46px] w-[46px] flex items-center justify-center sm:hidden"
               title="Share"
             >
-              <Share2 className="w-5 h-5" />
+              <Share2Icon className="w-5 h-5" />
             </button>
             <button
               onClick={handleCopy}
