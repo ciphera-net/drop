@@ -20,7 +20,14 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     setLoading(true)
     
     try {
-      const response = await fetch('/api/feedback', {
+      // * Call backend API directly
+      // In production, NEXT_PUBLIC_API_URL should be set. 
+      // If using proxy rewrite (like in Next.js config), /api/v1 might be mapped.
+      // Assuming typical setup: Frontend -> Next.js Proxy/API -> Backend or Frontend -> Backend directly
+      
+      // Using relative path assuming Next.js rewrites /api/v1 to backend or using CORS
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+      const response = await fetch(`${apiUrl}/api/v1/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
