@@ -255,53 +255,87 @@ export default function ProfileSettings() {
                   <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Default Share Settings</h2>
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">Set your preferred defaults for new drops. (These are saved locally)</p>
 
-                  <div className="mt-4 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
+                  <div className="mt-4 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
                         <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                           Default Expiration
                         </label>
-                        <select
-                          value={shareDefaults.expiration}
-                          onChange={(e) => setShareDefaults(prev => ({ ...prev, expiration: e.target.value }))}
-                          className="w-full px-4 py-2.5 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 focus:bg-white dark:focus:bg-neutral-900 
-                          focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none transition-all duration-200 dark:text-white appearance-none"
-                        >
-                          <option value="1h">1 Hour</option>
-                          <option value="24h">24 Hours</option>
-                          <option value="7d">7 Days</option>
-                        </select>
+                        <div className="grid grid-cols-3 gap-2">
+                          {EXPIRATION_OPTIONS.map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => setShareDefaults(prev => ({ ...prev, expiration: option.value }))}
+                              className={`px-3 py-2 text-sm font-medium rounded-xl border transition-all duration-200 ${
+                                shareDefaults.expiration === option.value
+                                  ? 'bg-brand-orange text-white border-brand-orange shadow-md shadow-brand-orange/20'
+                                  : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 hover:border-brand-orange/50 hover:bg-brand-orange/5 dark:hover:bg-brand-orange/10'
+                              }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                           Default Download Limit
                         </label>
-                        <select
-                          value={shareDefaults.downloadLimit}
-                          onChange={(e) => setShareDefaults(prev => ({ ...prev, downloadLimit: e.target.value }))}
-                          className="w-full px-4 py-2.5 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 focus:bg-white dark:focus:bg-neutral-900 
-                          focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none transition-all duration-200 dark:text-white appearance-none"
-                        >
-                          <option value="1">1 Download</option>
-                          <option value="10">10 Downloads</option>
-                          <option value="100">100 Downloads</option>
-                          <option value="unlimited">Unlimited</option>
-                        </select>
+                        <div className="grid grid-cols-4 gap-2">
+                          {DOWNLOAD_LIMITS.map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => setShareDefaults(prev => ({ ...prev, downloadLimit: option.value }))}
+                              className={`px-3 py-2 text-sm font-medium rounded-xl border transition-all duration-200 ${
+                                shareDefaults.downloadLimit === option.value
+                                  ? 'bg-brand-orange text-white border-brand-orange shadow-md shadow-brand-orange/20'
+                                  : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 hover:border-brand-orange/50 hover:bg-brand-orange/5 dark:hover:bg-brand-orange/10'
+                              }`}
+                            >
+                              {option.label === '∞' ? <span className="text-xl leading-none block">∞</span> : option.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-4 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50">
-                      <input
-                        type="checkbox"
-                        id="auto-pass"
-                        checked={shareDefaults.autoPassword}
-                        onChange={(e) => setShareDefaults(prev => ({ ...prev, autoPassword: e.target.checked }))}
-                        className="w-5 h-5 rounded border-neutral-300 text-brand-orange focus:ring-brand-orange"
-                      />
-                      <label htmlFor="auto-pass" className="flex-1 text-sm font-medium text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">
-                        Always generate a password for new drops by default
-                      </label>
+                    <div className={`flex items-center justify-between p-4 border rounded-xl transition-all duration-200 ${
+                      shareDefaults.autoPassword 
+                        ? 'bg-orange-50 dark:bg-brand-orange/10 border-brand-orange shadow-sm' 
+                        : 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg transition-colors duration-200 ${
+                          shareDefaults.autoPassword ? 'bg-brand-orange text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
+                        }`}>
+                          <LockClosedIcon className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className={`block text-sm font-medium transition-colors duration-200 ${
+                            shareDefaults.autoPassword ? 'text-brand-orange' : 'text-neutral-900 dark:text-white'
+                          }`}>
+                            Auto-generate password
+                          </span>
+                          <span className={`block text-xs transition-colors duration-200 ${
+                            shareDefaults.autoPassword ? 'text-brand-orange/80' : 'text-neutral-500 dark:text-neutral-400'
+                          }`}>
+                            Automatically secure new drops with a random password
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShareDefaults(prev => ({ ...prev, autoPassword: !prev.autoPassword }))}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          shareDefaults.autoPassword ? 'bg-brand-orange' : 'bg-neutral-200 dark:bg-neutral-700'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            shareDefaults.autoPassword ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
                 </div>
