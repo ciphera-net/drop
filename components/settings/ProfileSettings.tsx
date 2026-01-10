@@ -71,6 +71,14 @@ export default function ProfileSettings() {
   const [email, setEmail] = useState(user?.email || '')
   const [isEmailDirty, setIsEmailDirty] = useState(false)
   const [loadingProfile, setLoadingProfile] = useState(false)
+
+  // Update email when user data loads
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email)
+      setIsEmailDirty(false)
+    }
+  }, [user?.email])
   
   // Email Password Prompt State
   const [showEmailPasswordPrompt, setShowEmailPasswordPrompt] = useState(false)
