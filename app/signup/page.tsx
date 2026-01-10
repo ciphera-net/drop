@@ -113,7 +113,7 @@ export default function SignupPage() {
             type="submit"
             disabled={loading}
             isLoading={loading}
-            className="w-full rounded-md"
+            className="w-full rounded-md py-3"
           >
             {loading ? 'Creating account...' : 'Create account'}
           </Button>
