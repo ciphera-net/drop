@@ -269,7 +269,7 @@ export default function ProfileSettings() {
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">Set your preferred defaults for new drops. (These are saved locally)</p>
 
                   <div className="mt-4 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-6">
                       <div className="space-y-2">
                         <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                           Default Expiration
