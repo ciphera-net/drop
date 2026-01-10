@@ -7,7 +7,7 @@ export default function AboutPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-neutral-800 dark:text-neutral-200 mb-4">Why don't most web services end-to-end encrypt your data?</h2>
           <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-4">
-            There's not really a good reason for this.
+            There is not really a good reason for this.
           </p>
           <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-4">
             Most cloud storage services transfer your data over an encrypted connection, but once it arrives at their datacenters, 
