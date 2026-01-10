@@ -9,6 +9,7 @@ import { PasswordInput, Button, Input } from '@ciphera-net/ui'
 import { toast } from 'sonner'
 import api from '@/lib/api/client'
 import { deriveAuthKey } from '@/lib/crypto/password'
+import { deleteAccount, deleteAllUserFiles } from '@/lib/api/user'
 
 interface ShareDefaults {
   expiration: string
@@ -36,7 +37,7 @@ const DOWNLOAD_LIMITS = [
 ]
 
 export default function ProfileSettings() {
-  const { user, refresh } = useAuth()
+  const { user, refresh, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile')
   
@@ -79,6 +80,12 @@ export default function ProfileSettings() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loadingSecurity, setLoadingSecurity] = useState(false)
   const [securityError, setSecurityError] = useState<string | null>(null)
+
+  // Account Deletion State
+  const [showDeletePrompt, setShowDeletePrompt] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [loadingDelete, setLoadingDelete] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -158,6 +165,39 @@ export default function ProfileSettings() {
       setSecurityError(err.message || 'Failed to update password')
     } finally {
       setLoadingSecurity(false)
+    }
+  }
+
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setDeleteError(null)
+    setLoadingDelete(true)
+
+    try {
+      if (!user?.email) throw new Error('User email not found')
+
+      // 1. Derive key to verify ownership
+      const derivedKey = await deriveAuthKey(deletePassword, user.email)
+
+      // 2. Delete all files first (clean up resources)
+      try {
+        await deleteAllUserFiles()
+      } catch (err) {
+        console.warn('Failed to delete user files, proceeding with account deletion anyway', err)
+      }
+
+      // 3. Delete account
+      await deleteAccount(derivedKey)
+
+      toast.success('Account deleted successfully')
+      
+      // 4. Logout and redirect
+      logout()
+    } catch (err: any) {
+      setDeleteError(err.message || 'Failed to delete account')
+      toast.error(err.message || 'Failed to delete account')
+    } finally {
+      setLoadingDelete(false)
     }
   }
 
@@ -356,51 +396,73 @@ export default function ProfileSettings() {
             )}
 
             {activeTab === 'profile' && (
-              <form onSubmit={handleUpdateProfile} className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Profile Information</h2>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">Update your account details.</p>
-                </div>
+              <div className="space-y-12">
+                <form onSubmit={handleUpdateProfile} className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Profile Information</h2>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">Update your account details.</p>
+                  </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                      Email Address
-                    </label>
-                    <div className="relative group">
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value)
-                          setIsEmailDirty(e.target.value !== user.email)
-                        }}
-                        className="w-full pl-11 pr-4 py-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 focus:bg-white dark:focus:bg-neutral-900 
-                        focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none transition-all duration-200 dark:text-white"
-                      />
-                      <EnvelopeClosedIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-500 group-focus-within:text-brand-orange transition-colors" />
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        Email Address
+                      </label>
+                      <div className="relative group">
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value)
+                            setIsEmailDirty(e.target.value !== user.email)
+                          }}
+                          className="w-full pl-11 pr-4 py-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 focus:bg-white dark:focus:bg-neutral-900 
+                          focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none transition-all duration-200 dark:text-white"
+                        />
+                        <EnvelopeClosedIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 dark:text-neutral-500 group-focus-within:text-brand-orange transition-colors" />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={!isEmailDirty || loadingProfile}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl font-medium 
-                    hover:bg-neutral-800 dark:hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    {loadingProfile ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <CheckIcon className="w-4 h-4" />
-                        Save Changes
-                      </>
-                    )}
-                  </button>
+                  <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={!isEmailDirty || loadingProfile}
+                      className="flex items-center gap-2 px-6 py-2.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl font-medium 
+                      hover:bg-neutral-800 dark:hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      {loadingProfile ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <CheckIcon className="w-4 h-4" />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-red-600 dark:text-red-500 mb-1">Danger Zone</h2>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">Irreversible actions for your account.</p>
+                  </div>
+
+                  <div className="p-4 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 rounded-xl flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-red-900 dark:text-red-200">Delete Account</h3>
+                      <p className="text-sm text-red-700 dark:text-red-300 mt-1">Permanently delete your account and all data.</p>
+                    </div>
+                    <button
+                      onClick={() => setShowDeletePrompt(true)}
+                      className="px-4 py-2 bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-medium"
+                    >
+                      Delete Account
+                    </button>
+                  </div>
                 </div>
-              </form>
+              </div>
             )}
 
             {activeTab === 'security' && (
@@ -519,6 +581,80 @@ export default function ProfileSettings() {
                           className="flex-1 px-4 py-2 text-sm font-medium text-white bg-neutral-900 dark:bg-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 rounded-xl transition-colors disabled:opacity-50"
                         >
                           {loadingProfile ? 'Updating...' : 'Confirm'}
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Account Deletion Modal */}
+            <AnimatePresence>
+              {showDeletePrompt && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm rounded-2xl p-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    className="w-full max-w-sm bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-red-200 dark:border-red-900 shadow-xl"
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-red-600 dark:text-red-500">Delete Account?</h3>
+                      <button 
+                        onClick={() => {
+                          setShowDeletePrompt(false)
+                          setDeletePassword('')
+                          setDeleteError(null)
+                        }}
+                        className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-white"
+                      >
+                        <Cross2Icon className="w-5 h-5" />
+                      </button>
+                    </div>
+                    
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                      This action is <span className="font-bold">irreversible</span>. All your files and data will be permanently deleted.
+                    </p>
+
+                    {deleteError && (
+                      <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-lg text-xs text-red-600 dark:text-red-400">
+                        {deleteError}
+                      </div>
+                    )}
+
+                    <form onSubmit={handleDeleteAccount} className="space-y-4">
+                      <PasswordInput
+                        label="Verify Password"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        required
+                        className="mb-2"
+                      />
+                      
+                      <div className="flex gap-3">
+                         <button
+                          type="button"
+                          onClick={() => {
+                            setShowDeletePrompt(false)
+                            setDeletePassword('')
+                            setDeleteError(null)
+                          }}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={!deletePassword || loadingDelete}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 rounded-xl transition-colors disabled:opacity-50"
+                        >
+                          {loadingDelete ? 'Deleting...' : 'Delete Forever'}
                         </button>
                       </div>
                     </form>
