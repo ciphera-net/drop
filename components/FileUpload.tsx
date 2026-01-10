@@ -28,6 +28,14 @@ interface FileWithRelativePath extends File {
   webkitRelativePath: string
 }
 
+// Helper to generate secure random password
+const generatePassword = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
+  const array = new Uint8Array(16)
+  crypto.getRandomValues(array)
+  return Array.from(array).map(x => chars[x % chars.length]).join('')
+}
+
 export default function FileUpload({ onUploadComplete, requestId, requestKey }: FileUploadProps) {
   const { user } = useAuth()
   const [files, setFiles] = useState<File[]>([])
@@ -39,10 +47,51 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
   const [uploadSpeed, setUploadSpeed] = useState<string>('')
   const lastUploadRef = useRef<{ loaded: number; time: number }>({ loaded: 0, time: 0 })
   const [error, setError] = useState<string | null>(null)
+  
   const [expirationMinutes, setExpirationMinutes] = useState(60) // Default 1 Hour
   const [password, setPassword] = useState('')
   const [downloadLimit, setDownloadLimit] = useState<number | undefined>()
   const [oneTimeDownload, setOneTimeDownload] = useState(true)
+
+  // Load defaults from localStorage
+  useEffect(() => {
+    // Only load defaults for normal uploads, not requests
+    if (requestId) return
+
+    const saved = localStorage.getItem('drop_share_defaults')
+    if (saved) {
+      try {
+        const defaults = JSON.parse(saved)
+        
+        // Expiration
+        if (defaults.expiration) {
+          switch (defaults.expiration) {
+            case '1h': setExpirationMinutes(60); break;
+            case '24h': setExpirationMinutes(1440); break;
+            case '7d': setExpirationMinutes(10080); break;
+          }
+        }
+
+        // Download Limit
+        if (defaults.downloadLimit) {
+          if (defaults.downloadLimit === 'unlimited') {
+            setDownloadLimit(undefined)
+          } else {
+             const limit = parseInt(defaults.downloadLimit)
+             if (!isNaN(limit)) setDownloadLimit(limit)
+          }
+        }
+
+        // Auto Password
+        if (defaults.autoPassword) {
+          setPassword(generatePassword())
+        }
+      } catch (e) {
+        console.error('Failed to load share defaults', e)
+      }
+    }
+  }, [requestId])
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
 

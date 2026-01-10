@@ -1,18 +1,56 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/context'
+import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PersonIcon, LockClosedIcon, EnvelopeClosedIcon, CheckIcon, ExclamationTriangleIcon, Cross2Icon } from '@radix-ui/react-icons'
+import { PersonIcon, LockClosedIcon, EnvelopeClosedIcon, CheckIcon, ExclamationTriangleIcon, Cross2Icon, GearIcon, SunIcon, MoonIcon, LaptopIcon } from '@radix-ui/react-icons'
 import { PasswordInput, Button, Input } from '@ciphera-net/ui'
 import { toast } from 'sonner'
 import api from '@/lib/api/client'
 import { deriveAuthKey } from '@/lib/crypto/password'
 
+interface ShareDefaults {
+  expiration: string
+  downloadLimit: string
+  autoPassword: boolean
+}
+
+const DEFAULT_SHARE_SETTINGS: ShareDefaults = {
+  expiration: '24h',
+  downloadLimit: '10',
+  autoPassword: false
+}
+
 export default function ProfileSettings() {
   const { user, refresh } = useAuth()
-  const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile')
+  const { theme, setTheme } = useTheme()
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile')
   
+  // Preferences State
+  const [shareDefaults, setShareDefaults] = useState<ShareDefaults>(DEFAULT_SHARE_SETTINGS)
+  const [defaultsLoaded, setDefaultsLoaded] = useState(false)
+
+  // Load defaults on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('drop_share_defaults')
+    if (saved) {
+      try {
+        setShareDefaults({ ...DEFAULT_SHARE_SETTINGS, ...JSON.parse(saved) })
+      } catch (e) {
+        console.error('Failed to parse share defaults', e)
+      }
+    }
+    setDefaultsLoaded(true)
+  }, [])
+
+  // Save defaults when changed
+  useEffect(() => {
+    if (defaultsLoaded) {
+      localStorage.setItem('drop_share_defaults', JSON.stringify(shareDefaults))
+    }
+  }, [shareDefaults, defaultsLoaded])
+
   // Profile State
   const [email, setEmail] = useState(user?.email || '')
   const [isEmailDirty, setIsEmailDirty] = useState(false)
@@ -146,6 +184,17 @@ export default function ProfileSettings() {
             <LockClosedIcon className="w-5 h-5" />
             Security
           </button>
+          <button
+            onClick={() => setActiveTab('preferences')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+              activeTab === 'preferences'
+                ? 'bg-brand-orange/10 text-brand-orange'
+                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+            }`}
+          >
+            <GearIcon className="w-5 h-5" />
+            Preferences
+          </button>
         </nav>
 
         {/* Content Area */}
@@ -157,6 +206,108 @@ export default function ProfileSettings() {
             transition={{ duration: 0.2 }}
             className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-sm"
           >
+            {activeTab === 'preferences' && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Appearance</h2>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">Customize how Drop looks on your device.</p>
+                  
+                  <div className="mt-4 grid grid-cols-3 gap-3">
+                    <button
+                      onClick={() => setTheme('light')}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                        theme === 'light'
+                          ? 'bg-brand-orange/5 border-brand-orange text-brand-orange'
+                          : 'bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      }`}
+                    >
+                      <SunIcon className="w-6 h-6" />
+                      <span className="text-sm font-medium">Light</span>
+                    </button>
+                    <button
+                      onClick={() => setTheme('dark')}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                        theme === 'dark'
+                          ? 'bg-brand-orange/5 border-brand-orange text-brand-orange'
+                          : 'bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      }`}
+                    >
+                      <MoonIcon className="w-6 h-6" />
+                      <span className="text-sm font-medium">Dark</span>
+                    </button>
+                    <button
+                      onClick={() => setTheme('system')}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                        theme === 'system'
+                          ? 'bg-brand-orange/5 border-brand-orange text-brand-orange'
+                          : 'bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      }`}
+                    >
+                      <LaptopIcon className="w-6 h-6" />
+                      <span className="text-sm font-medium">System</span>
+                    </button>
+                  </div>
+                </div>
+
+                <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                <div>
+                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Default Share Settings</h2>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">Set your preferred defaults for new drops. (These are saved locally)</p>
+
+                  <div className="mt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                          Default Expiration
+                        </label>
+                        <select
+                          value={shareDefaults.expiration}
+                          onChange={(e) => setShareDefaults(prev => ({ ...prev, expiration: e.target.value }))}
+                          className="w-full px-4 py-2.5 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 focus:bg-white dark:focus:bg-neutral-900 
+                          focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none transition-all duration-200 dark:text-white appearance-none"
+                        >
+                          <option value="1h">1 Hour</option>
+                          <option value="24h">24 Hours</option>
+                          <option value="7d">7 Days</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                          Default Download Limit
+                        </label>
+                        <select
+                          value={shareDefaults.downloadLimit}
+                          onChange={(e) => setShareDefaults(prev => ({ ...prev, downloadLimit: e.target.value }))}
+                          className="w-full px-4 py-2.5 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 focus:bg-white dark:focus:bg-neutral-900 
+                          focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none transition-all duration-200 dark:text-white appearance-none"
+                        >
+                          <option value="1">1 Download</option>
+                          <option value="10">10 Downloads</option>
+                          <option value="100">100 Downloads</option>
+                          <option value="unlimited">Unlimited</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50">
+                      <input
+                        type="checkbox"
+                        id="auto-pass"
+                        checked={shareDefaults.autoPassword}
+                        onChange={(e) => setShareDefaults(prev => ({ ...prev, autoPassword: e.target.checked }))}
+                        className="w-5 h-5 rounded border-neutral-300 text-brand-orange focus:ring-brand-orange"
+                      />
+                      <label htmlFor="auto-pass" className="flex-1 text-sm font-medium text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">
+                        Always generate a password for new drops by default
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'profile' && (
               <form onSubmit={handleUpdateProfile} className="space-y-6">
                 <div>
