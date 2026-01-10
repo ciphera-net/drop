@@ -22,6 +22,19 @@ const DEFAULT_SHARE_SETTINGS: ShareDefaults = {
   autoPassword: false
 }
 
+const EXPIRATION_OPTIONS = [
+  { label: '1 Hour', value: '1h' },
+  { label: '24 Hours', value: '24h' },
+  { label: '7 Days', value: '7d' },
+]
+
+const DOWNLOAD_LIMITS = [
+  { label: '1', value: '1' },
+  { label: '10', value: '10' },
+  { label: '100', value: '100' },
+  { label: '∞', value: 'unlimited' },
+]
+
 export default function ProfileSettings() {
   const { user, refresh } = useAuth()
   const { theme, setTheme } = useTheme()
