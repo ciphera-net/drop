@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/context'
 import { useTheme } from 'next-themes'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PersonIcon, LockClosedIcon, EnvelopeClosedIcon, CheckIcon, ExclamationTriangleIcon, Cross2Icon, GearIcon, SunIcon, MoonIcon, LaptopIcon } from '@radix-ui/react-icons'
+import { PersonIcon, LockClosedIcon, EnvelopeClosedIcon, CheckIcon, ExclamationTriangleIcon, Cross2Icon, GearIcon, SunIcon, MoonIcon, LaptopIcon, MobileIcon } from '@radix-ui/react-icons'
 import { PasswordInput, Button, Input } from '@ciphera-net/ui'
 import { toast } from 'sonner'
 import api from '@/lib/api/client'
 import { deriveAuthKey } from '@/lib/crypto/password'
 import { deleteAccount, deleteAllUserFiles } from '@/lib/api/user'
+import { setup2FA, verify2FA, disable2FA, Setup2FAResponse } from '@/lib/api/2fa'
+import Image from 'next/image'
 
 interface ShareDefaults {
   expiration: string
@@ -80,6 +82,12 @@ export default function ProfileSettings() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loadingSecurity, setLoadingSecurity] = useState(false)
   const [securityError, setSecurityError] = useState<string | null>(null)
+
+  // 2FA State
+  const [show2FASetup, setShow2FASetup] = useState(false)
+  const [twoFAData, setTwoFAData] = useState<Setup2FAResponse | null>(null)
+  const [twoFACode, setTwoFACode] = useState('')
+  const [loading2FA, setLoading2FA] = useState(false)
 
   // Account Deletion State
   const [showDeletePrompt, setShowDeletePrompt] = useState(false)
@@ -198,6 +206,37 @@ export default function ProfileSettings() {
       toast.error(err.message || 'Failed to delete account')
     } finally {
       setLoadingDelete(false)
+    }
+  }
+
+  const handleStart2FASetup = async () => {
+    setLoading2FA(true)
+    try {
+      const data = await setup2FA()
+      setTwoFAData(data)
+      setShow2FASetup(true)
+    } catch (err: any) {
+      toast.error('Failed to start 2FA setup')
+    } finally {
+      setLoading2FA(false)
+    }
+  }
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading2FA(true)
+    try {
+      await verify2FA(twoFACode)
+      toast.success('2FA enabled successfully')
+      setShow2FASetup(false)
+      setTwoFAData(null)
+      setTwoFACode('')
+      // Ideally refresh user context here to show "Enabled" state
+      // but simplistic approach is fine for now
+    } catch (err: any) {
+      toast.error('Invalid code. Please try again.')
+    } finally {
+      setLoading2FA(false)
     }
   }
 
@@ -466,59 +505,146 @@ export default function ProfileSettings() {
             )}
 
             {activeTab === 'security' && (
-              <form onSubmit={handleUpdatePassword} className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Security Settings</h2>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">Update your password to keep your account secure.</p>
-                </div>
-
-                {securityError && (
-                  <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl flex items-start gap-3 text-red-600 dark:text-red-400">
-                    <ExclamationTriangleIcon className="w-5 h-5 shrink-0 mt-0.5" />
-                    <span className="text-sm font-medium">{securityError}</span>
+              <div className="space-y-12">
+                {/* 2FA Section */}
+                <div className="space-y-6">
+                   <div>
+                    <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Two-Factor Authentication</h2>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">Add an extra layer of security to your account.</p>
                   </div>
-                )}
 
-                <div className="space-y-4">
-                  <PasswordInput
-                    label="Current Password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                  />
-                  <hr className="border-neutral-100 dark:border-neutral-800 my-4" />
-                  <PasswordInput
-                    label="New Password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                  <PasswordInput
-                    label="Confirm New Password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
+                  <div className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-neutral-100 dark:border-neutral-800">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white dark:bg-neutral-800 rounded-lg text-neutral-400">
+                          <MobileIcon className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-neutral-900 dark:text-white">Authenticator App</h3>
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">Use an app like Google Authenticator or Authy.</p>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={handleStart2FASetup}
+                        disabled={loading2FA}
+                        className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg font-medium hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
+                      >
+                        Enable 2FA
+                      </button>
+                    </div>
+
+                    <AnimatePresence>
+                      {show2FASetup && twoFAData && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-800 overflow-hidden"
+                        >
+                          <div className="grid md:grid-cols-2 gap-8">
+                            <div className="flex justify-center bg-white p-4 rounded-xl border border-neutral-200">
+                              {/* QR Code */}
+                              <img src={twoFAData.qr_code} alt="2FA QR Code" className="w-48 h-48 object-contain" />
+                            </div>
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-medium text-neutral-900 dark:text-white mb-2">1. Scan QR Code</h4>
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                  Open your authenticator app and scan the image.
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <h4 className="font-medium text-neutral-900 dark:text-white mb-2">2. Enter Code</h4>
+                                <form onSubmit={handleVerify2FA} className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    maxLength={6}
+                                    value={twoFACode}
+                                    onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="000000"
+                                    className="w-32 px-3 py-2 text-center tracking-widest font-mono text-lg border border-neutral-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none dark:text-white"
+                                  />
+                                  <button
+                                    type="submit"
+                                    disabled={twoFACode.length !== 6 || loading2FA}
+                                    className="px-4 py-2 bg-brand-orange text-white rounded-lg font-medium hover:bg-brand-orange/90 transition-colors disabled:opacity-50"
+                                  >
+                                    Verify
+                                  </button>
+                                </form>
+                              </div>
+
+                              <div className="pt-2">
+                                <p className="text-xs text-neutral-400 font-mono break-all">
+                                  Secret: {twoFAData.secret}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
-                <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={!currentPassword || !newPassword || !confirmPassword || loadingSecurity}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl font-medium 
-                    hover:bg-neutral-800 dark:hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    {loadingSecurity ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <CheckIcon className="w-4 h-4" />
-                        Update Password
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
+                <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                <form onSubmit={handleUpdatePassword} className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Password</h2>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">Update your password to keep your account secure.</p>
+                  </div>
+
+                  {securityError && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl flex items-start gap-3 text-red-600 dark:text-red-400">
+                      <ExclamationTriangleIcon className="w-5 h-5 shrink-0 mt-0.5" />
+                      <span className="text-sm font-medium">{securityError}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <PasswordInput
+                      label="Current Password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                    />
+                    <hr className="border-neutral-100 dark:border-neutral-800 my-4" />
+                    <PasswordInput
+                      label="New Password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                    <PasswordInput
+                      label="Confirm New Password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={!currentPassword || !newPassword || !confirmPassword || loadingSecurity}
+                      className="flex items-center gap-2 px-6 py-2.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl font-medium 
+                      hover:bg-neutral-800 dark:hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      {loadingSecurity ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <CheckIcon className="w-4 h-4" />
+                          Update Password
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
             )}
 
             {/* Email Password Confirmation Modal */}
