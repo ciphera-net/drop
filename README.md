@@ -44,7 +44,7 @@ This modular design ensures that cryptographic operations (Client) are strictly 
 ### Prerequisites
 
 - Node.js 18+ and npm/pnpm
-- Backend server running (see `drop-backend` repository)
+- A running Drop Backend instance (see [API Documentation](docs/API.md) for implementation details)
 
 ### Installation
 
