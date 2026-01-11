@@ -88,8 +88,9 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
-            <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-800">
-              <thead className="bg-neutral-50 dark:bg-neutral-800/50">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-800">
+                <thead className="bg-neutral-50 dark:bg-neutral-800/50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                     Uploaded
@@ -134,8 +135,9 @@ export default function DashboardPage() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
