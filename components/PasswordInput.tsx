@@ -13,6 +13,7 @@ interface PasswordInputProps {
   className?: string
   id?: string
   autoComplete?: string
+  minLength?: number
 }
 
 export default function PasswordInput({
@@ -25,7 +26,8 @@ export default function PasswordInput({
   required = false,
   className = '',
   id,
-  autoComplete
+  autoComplete,
+  minLength
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false)
   const inputId = id || 'password-input'
@@ -51,6 +53,7 @@ export default function PasswordInput({
           placeholder={placeholder}
           disabled={disabled}
           autoComplete={autoComplete}
+          minLength={minLength}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
           className={`w-full pl-11 pr-12 py-3 border rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 focus:bg-white dark:focus:bg-neutral-900 
