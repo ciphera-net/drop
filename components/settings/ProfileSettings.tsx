@@ -9,7 +9,7 @@ import { PasswordInput, Button, Input } from '@ciphera-net/ui'
 import { toast } from 'sonner'
 import api from '@/lib/api/client'
 import { deriveAuthKey } from '@/lib/crypto/password'
-import { deleteAccount, deleteAllUserFiles } from '@/lib/api/user'
+import { deleteAccount, deleteAllUserFiles, getUserSessions, revokeSession, type Session } from '@/lib/api/user'
 import { setup2FA, verify2FA, disable2FA, regenerateRecoveryCodes, Setup2FAResponse } from '@/lib/api/2fa'
 import Image from 'next/image'
 
@@ -107,6 +107,11 @@ export default function ProfileSettings() {
   const [deletePassword, setDeletePassword] = useState('')
   const [loadingDelete, setLoadingDelete] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  // Sessions State
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [loadingSessions, setLoadingSessions] = useState(false)
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null)
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -289,6 +294,114 @@ export default function ProfileSettings() {
   const copyCodes = () => {
     navigator.clipboard.writeText(recoveryCodes.join('\n'))
     toast.success('Codes copied to clipboard')
+  }
+
+  // Load sessions
+  const loadSessions = async () => {
+    setLoadingSessions(true)
+    try {
+      const data = await getUserSessions()
+      setSessions(data.sessions)
+    } catch (err: any) {
+      toast.error('Failed to load sessions')
+      console.error(err)
+    } finally {
+      setLoadingSessions(false)
+    }
+  }
+
+  // Load sessions when security tab is active
+  useEffect(() => {
+    if (activeTab === 'security') {
+      loadSessions()
+    }
+  }, [activeTab])
+
+  const handleRevokeSession = async (sessionId: string) => {
+    const session = sessions.find(s => s.id === sessionId)
+    const isCurrentSession = session?.is_current
+
+    if (isCurrentSession) {
+      if (!confirm('This will log you out of this device. Continue?')) {
+        return
+      }
+    }
+
+    setRevokingSessionId(sessionId)
+    try {
+      await revokeSession(sessionId)
+      toast.success('Session revoked successfully')
+      
+      // If current session was revoked, logout immediately
+      if (isCurrentSession) {
+        setTimeout(() => {
+          logout()
+        }, 1000)
+      } else {
+        // Reload sessions list for other sessions
+        await loadSessions()
+      }
+    } catch (err: any) {
+      toast.error('Failed to revoke session')
+      console.error(err)
+    } finally {
+      setRevokingSessionId(null)
+    }
+  }
+
+  // Parse user agent to get browser and device info
+  const parseUserAgent = (ua: string) => {
+    let browser = 'Unknown Browser'
+    let device = 'Unknown Device'
+    let os = 'Unknown OS'
+
+    // Browser detection
+    if (ua.includes('Chrome') && !ua.includes('Edg')) {
+      browser = 'Chrome'
+    } else if (ua.includes('Firefox')) {
+      browser = 'Firefox'
+    } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
+      browser = 'Safari'
+    } else if (ua.includes('Edg')) {
+      browser = 'Edge'
+    } else if (ua.includes('Opera') || ua.includes('OPR')) {
+      browser = 'Opera'
+    }
+
+    // OS detection
+    if (ua.includes('Windows')) {
+      os = 'Windows'
+    } else if (ua.includes('Mac OS X') || ua.includes('Macintosh')) {
+      os = 'macOS'
+    } else if (ua.includes('Linux')) {
+      os = 'Linux'
+    } else if (ua.includes('Android')) {
+      os = 'Android'
+    } else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) {
+      os = 'iOS'
+    }
+
+    // Device detection
+    if (ua.includes('Mobile') || ua.includes('Android') || ua.includes('iPhone')) {
+      device = 'Mobile'
+    } else if (ua.includes('Tablet') || ua.includes('iPad')) {
+      device = 'Tablet'
+    } else {
+      device = 'Desktop'
+    }
+
+    return { browser, os, device }
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date)
   }
 
   if (!user) return null
@@ -731,6 +844,75 @@ export default function ProfileSettings() {
                     </button>
                   </div>
                 </form>
+
+                <hr className="border-neutral-100 dark:border-neutral-800" />
+
+                {/* Active Sessions Section */}
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Active Sessions</h2>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">Manage devices that are currently signed in to your account.</p>
+                  </div>
+
+                  {loadingSessions ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-brand-orange/30 border-t-brand-orange rounded-full animate-spin" />
+                    </div>
+                  ) : sessions.length === 0 ? (
+                    <div className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-neutral-200 dark:border-neutral-800 text-center text-neutral-500 dark:text-neutral-400">
+                      No active sessions found.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {sessions.map((session) => {
+                        const { browser, os, device } = parseUserAgent(session.user_agent)
+                        const isCurrent = session.is_current
+                        
+                        return (
+                          <div
+                            key={session.id}
+                            className={`p-4 rounded-xl border transition-all duration-200 ${
+                              isCurrent
+                                ? 'bg-brand-orange/5 border-brand-orange/30'
+                                : 'bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-neutral-900 dark:text-white">
+                                    {browser} on {os}
+                                  </span>
+                                  {isCurrent && (
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-brand-orange/10 text-brand-orange rounded-full">
+                                      Current Session
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-neutral-500 dark:text-neutral-400 space-y-0.5">
+                                  <div>{device} • {session.client_ip || 'Unknown IP'}</div>
+                                  <div>Signed in {formatDate(session.created_at)}</div>
+                                  {session.expires_at && (
+                                    <div>Expires {formatDate(session.expires_at)}</div>
+                                  )}
+                                </div>
+                              </div>
+                              {!isCurrent && (
+                                <button
+                                  onClick={() => handleRevokeSession(session.id)}
+                                  disabled={revokingSessionId === session.id}
+                                  className="px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  {revokingSessionId === session.id ? 'Revoking...' : 'Revoke'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
