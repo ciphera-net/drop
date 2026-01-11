@@ -15,7 +15,8 @@ import { useAuth } from '../lib/auth/context'
 import { formatBytes } from '../lib/utils/format'
 import { useKeyboardShortcuts } from '../lib/hooks/useKeyboardShortcuts'
 
-import { PasswordInput, Button, Input } from '@ciphera-net/ui'
+import { Button, Input } from '@ciphera-net/ui'
+import PasswordInput from './PasswordInput'
 import Captcha from './Captcha'
 
 interface FileUploadProps {

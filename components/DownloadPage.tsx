@@ -7,7 +7,8 @@ import { getFileMetadata } from '../lib/api/metadata'
 import { decryptFile, decryptString, base64ToArrayBuffer } from '../lib/crypto/encryption'
 import { decodeKeyFromSharing, importEncryptionKey } from '../lib/crypto/key-management'
 
-import { PasswordInput, Button, Input } from '@ciphera-net/ui'
+import { Button, Input } from '@ciphera-net/ui'
+import PasswordInput from './PasswordInput'
 
 interface DownloadPageProps {
   shareId: string
