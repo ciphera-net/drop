@@ -54,6 +54,11 @@ export async function switchContext(organizationId: string | null): Promise<{ ac
   })
 }
 
+// Get organization details
+export async function getOrganization(organizationId: string): Promise<Organization> {
+  return await authFetch<Organization>(`/auth/organizations/${organizationId}`)
+}
+
 // Delete an organization
 export async function deleteOrganization(organizationId: string): Promise<void> {
   await authFetch(`/auth/organizations/${organizationId}`, {

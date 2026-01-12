@@ -11,8 +11,10 @@ import {
   sendInvitation, 
   revokeInvitation,
   updateOrganization,
+  getOrganization,
   OrganizationMember,
-  OrganizationInvitation 
+  OrganizationInvitation,
+  Organization
 } from '@/lib/api/organization'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -47,6 +49,8 @@ export default function OrganizationSettings() {
   const [isInviting, setIsInviting] = useState(false)
 
   // Org Update State
+  const [orgDetails, setOrgDetails] = useState<Organization | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
   const [orgName, setOrgName] = useState('')
   const [orgSlug, setOrgSlug] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -68,14 +72,18 @@ export default function OrganizationSettings() {
   const loadMembers = useCallback(async () => {
     if (!currentOrgId) return
     try {
-      const [membersData, invitesData] = await Promise.all([
+      const [membersData, invitesData, orgData] = await Promise.all([
         getOrganizationMembers(currentOrgId),
-        getInvitations(currentOrgId)
+        getInvitations(currentOrgId),
+        getOrganization(currentOrgId)
       ])
       setMembers(membersData)
       setInvitations(invitesData)
+      setOrgDetails(orgData)
+      setOrgName(orgData.name)
+      setOrgSlug(orgData.slug)
     } catch (error) {
-      console.error('Failed to load members:', error)
+      console.error('Failed to load data:', error)
       // toast.error('Failed to load members')
     } finally {
       setIsLoadingMembers(false)
@@ -89,16 +97,6 @@ export default function OrganizationSettings() {
       setIsLoadingMembers(false)
     }
   }, [currentOrgId, loadMembers])
-
-  useEffect(() => {
-    if (members.length > 0 && user) {
-        const member = members.find(m => m.user_id === user.id)
-        if (member) {
-            setOrgName(member.organization_name || '')
-            setOrgSlug(member.organization_slug || '')
-        }
-    }
-  }, [members, user])
 
   // If no org ID, we are in personal workspace, so don't show org settings
   if (!currentOrgId) {
@@ -173,6 +171,7 @@ export default function OrganizationSettings() {
     try {
       await updateOrganization(currentOrgId, orgName, orgSlug)
       toast.success('Organization updated successfully')
+      setIsEditing(false)
       loadMembers() 
     } catch (error: any) {
       toast.error(error.message || 'Failed to update organization')
@@ -250,7 +249,8 @@ export default function OrganizationSettings() {
                         required
                         minLength={2}
                         maxLength={50}
-                        className="bg-white dark:bg-neutral-900"
+                        disabled={!isEditing}
+                        className={`bg-white dark:bg-neutral-900 ${!isEditing ? 'text-neutral-500' : ''}`}
                       />
                     </div>
                     
@@ -269,7 +269,8 @@ export default function OrganizationSettings() {
                           required
                           minLength={3}
                           maxLength={30}
-                          className="rounded-l-none bg-white dark:bg-neutral-900"
+                          disabled={!isEditing}
+                          className={`rounded-l-none bg-white dark:bg-neutral-900 ${!isEditing ? 'text-neutral-500' : ''}`}
                         />
                       </div>
                       <p className="text-xs text-neutral-500">
@@ -277,10 +278,33 @@ export default function OrganizationSettings() {
                       </p>
                     </div>
 
-                    <div className="flex justify-end">
-                        <Button type="submit" disabled={isSaving} isLoading={isSaving}>
-                            Save Changes
-                        </Button>
+                    <div className="flex justify-end gap-3">
+                        {!isEditing ? (
+                            <Button type="button" onClick={() => setIsEditing(true)}>
+                                Edit Details
+                            </Button>
+                        ) : (
+                            <>
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    onClick={() => {
+                                        setIsEditing(false)
+                                        // Reset values
+                                        if (orgDetails) {
+                                            setOrgName(orgDetails.name)
+                                            setOrgSlug(orgDetails.slug)
+                                        }
+                                    }}
+                                    disabled={isSaving}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={isSaving} isLoading={isSaving}>
+                                    Save Changes
+                                </Button>
+                            </>
+                        )}
                     </div>
                  </form>
 
