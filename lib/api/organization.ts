@@ -40,3 +40,10 @@ export async function switchContext(organizationId: string | null): Promise<{ ac
     body: JSON.stringify({ organization_id: organizationId || '' }),
   })
 }
+
+// Delete an organization
+export async function deleteOrganization(organizationId: string): Promise<void> {
+  await authFetch(`/auth/organizations/${organizationId}`, {
+    method: 'DELETE',
+  })
+}
