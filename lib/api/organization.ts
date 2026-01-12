@@ -15,6 +15,7 @@ export interface OrganizationMember {
   joined_at: string
   organization_name?: string
   organization_slug?: string
+  user_email?: string
 }
 
 export interface OrganizationInvitation {
@@ -58,6 +59,12 @@ export async function deleteOrganization(organizationId: string): Promise<void> 
   await authFetch(`/auth/organizations/${organizationId}`, {
     method: 'DELETE',
   })
+}
+
+// Get organization members
+export async function getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
+  const data = await authFetch<{ members: OrganizationMember[] }>(`/auth/organizations/${organizationId}/members`)
+  return data.members || []
 }
 
 // Send an invitation
