@@ -7,20 +7,29 @@ import { CheckIcon, PlusIcon, Cross2Icon, ArrowRightIcon } from '@radix-ui/react
 import { getUserOrganizations, sendInvitation, OrganizationMember } from '@/lib/api/organization'
 import { toast } from 'sonner'
 import { Button, Input } from '@ciphera-net/ui'
+import React from 'react'
 
-export default function OnboardingPage({ params }: { params: { slug: string } }) {
+export default function OnboardingPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [org, setOrg] = useState<OrganizationMember | null>(null)
   const [loading, setLoading] = useState(true)
   const [invites, setInvites] = useState<string[]>([''])
   const [sending, setSending] = useState(false)
+  const [slug, setSlug] = useState<string>('')
+
+  // Unwrap params
+  React.useEffect(() => {
+    params.then(unwrapped => setSlug(unwrapped.slug))
+  }, [params])
 
   useEffect(() => {
+    if (!slug) return
+
     const fetchOrg = async () => {
       try {
         const orgs = await getUserOrganizations()
-        const currentOrg = orgs.find(o => o.organization_slug === params.slug)
+        const currentOrg = orgs.find(o => o.organization_slug === slug)
         if (currentOrg) {
           setOrg(currentOrg)
         } else {
@@ -34,7 +43,7 @@ export default function OnboardingPage({ params }: { params: { slug: string } })
       }
     }
     fetchOrg()
-  }, [params.slug, router])
+  }, [slug, router])
 
   const handleAddEmail = () => {
     setInvites([...invites, ''])
@@ -75,7 +84,7 @@ export default function OnboardingPage({ params }: { params: { slug: string } })
     }
   }
 
-  if (loading) {
+  if (loading || !slug) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
