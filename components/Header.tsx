@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { UserMenu } from '@ciphera-net/ui'
+import UserMenu from './UserMenu'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/context'
 import { HamburgerMenuIcon, Cross1Icon } from '@radix-ui/react-icons'
@@ -90,10 +90,7 @@ export default function Header() {
         {/* User Menu */}
         <div className="flex items-center gap-3">
           {/* ThemeToggle removed from here */}
-          <UserMenu 
-             auth={{ user, loading, logout }} 
-             LinkComponent={Link} 
-          />
+          <UserMenu />
           
           {/* Mobile Menu Toggle */}
           {!loading && !user && (
