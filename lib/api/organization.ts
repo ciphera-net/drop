@@ -61,6 +61,14 @@ export async function deleteOrganization(organizationId: string): Promise<void> 
   })
 }
 
+// Update organization details
+export async function updateOrganization(organizationId: string, name: string, slug: string): Promise<Organization> {
+  return await authFetch<Organization>(`/auth/organizations/${organizationId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name, slug }),
+  })
+}
+
 // Get organization members
 export async function getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
   const data = await authFetch<{ members: OrganizationMember[] }>(`/auth/organizations/${organizationId}/members`)

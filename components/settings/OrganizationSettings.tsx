@@ -10,6 +10,7 @@ import {
   getInvitations, 
   sendInvitation, 
   revokeInvitation,
+  updateOrganization,
   OrganizationMember,
   OrganizationInvitation 
 } from '@/lib/api/organization'
@@ -44,6 +45,11 @@ export default function OrganizationSettings() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('member')
   const [isInviting, setIsInviting] = useState(false)
+
+  // Org Update State
+  const [orgName, setOrgName] = useState('')
+  const [orgSlug, setOrgSlug] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   const getOrgIdFromToken = () => {
     if (typeof window === 'undefined') return null
@@ -83,6 +89,16 @@ export default function OrganizationSettings() {
       setIsLoadingMembers(false)
     }
   }, [currentOrgId, loadMembers])
+
+  useEffect(() => {
+    if (members.length > 0 && user) {
+        const member = members.find(m => m.user_id === user.id)
+        if (member) {
+            setOrgName(member.organization_name || '')
+            setOrgSlug(member.organization_slug || '')
+        }
+    }
+  }, [members, user])
 
   // If no org ID, we are in personal workspace, so don't show org settings
   if (!currentOrgId) {
@@ -149,6 +165,22 @@ export default function OrganizationSettings() {
     }
   }
 
+  const handleUpdateOrg = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentOrgId) return
+
+    setIsSaving(true)
+    try {
+      await updateOrganization(currentOrgId, orgName, orgSlug)
+      toast.success('Organization updated successfully')
+      loadMembers() 
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update organization')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   // Helper to find current org name (from members list if available, or just fallback)
   // Ideally we'd have a full org object, but we have ID. 
   // We can find the current user's membership entry which has org name.
@@ -206,20 +238,51 @@ export default function OrganizationSettings() {
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">Basic details about your organization.</p>
                  </div>
 
-                 <div className="space-y-4">
+                 <form onSubmit={handleUpdateOrg} className="space-y-4">
                     <div className="space-y-1.5">
                       <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                         Organization Name
                       </label>
-                      <input
+                      <Input
                         type="text"
-                        value={currentOrgName}
-                        disabled
-                        className="w-full px-4 py-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-900 text-neutral-500 cursor-not-allowed"
+                        value={orgName}
+                        onChange={(e) => setOrgName(e.target.value)}
+                        required
+                        minLength={2}
+                        maxLength={50}
+                        className="bg-white dark:bg-neutral-900"
                       />
-                      <p className="text-xs text-neutral-400">Organization names cannot be changed at this time.</p>
                     </div>
-                 </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        Organization Slug
+                      </label>
+                      <div className="flex rounded-xl shadow-sm">
+                        <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-500 text-sm">
+                          drop.ciphera.net/
+                        </span>
+                        <Input
+                          type="text"
+                          value={orgSlug}
+                          onChange={(e) => setOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                          required
+                          minLength={3}
+                          maxLength={30}
+                          className="rounded-l-none bg-white dark:bg-neutral-900"
+                        />
+                      </div>
+                      <p className="text-xs text-neutral-500">
+                        Changing the slug will change your organization's URL.
+                      </p>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={isSaving} isLoading={isSaving}>
+                            Save Changes
+                        </Button>
+                    </div>
+                 </form>
 
                  <div className="space-y-6">
                   <div>
