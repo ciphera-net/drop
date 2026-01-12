@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ExitIcon, PersonIcon, GearIcon, DashboardIcon, ChevronDownIcon } from '@radix-ui/react-icons'
 
+// * Import Workspace Switcher
 import WorkspaceSwitcher from './WorkspaceSwitcher'
 
 export default function UserMenu() {

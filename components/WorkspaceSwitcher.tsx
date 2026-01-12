@@ -2,29 +2,29 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckIcon, PlusIcon, PersonIcon, CubeIcon } from '@radix-ui/react-icons'
+import { PlusIcon, PersonIcon, CubeIcon } from '@radix-ui/react-icons'
 import { getUserOrganizations, switchContext, OrganizationMember } from '@/lib/api/organization'
 import { useAuth } from '@/lib/auth/context'
 import Link from 'next/link'
 
 export default function WorkspaceSwitcher() {
-  const { user, refreshSession } = useAuth()
+  const auth = useAuth()
+  // * Defensive: fallback to refresh if refreshSession is missing (e.g. during migration/caching)
+  const refreshSession = auth.refreshSession || auth.refresh 
+  const { user } = auth
+  
   const router = useRouter()
   const [orgs, setOrgs] = useState<OrganizationMember[]>([])
   const [switching, setSwitching] = useState<string | null>(null)
 
-  // Current context (derived from user claims or local state?)
-  // Ideally, the AuthContext should expose the current 'org_id' claim.
-  // For MVP, we might need to parse the token or rely on session storage.
-  // Let's assume we can infer it or we default to Personal.
-  // * Temporary Hack: We'll need to update AuthProvider to expose `currentContext`.
-  // * For now, we'll try to guess based on a hypothetical prop or just show list.
-  
-  const currentOrgId = null // TODO: Get from Auth Context
-
   useEffect(() => {
     if (user) {
-      getUserOrganizations().then(setOrgs).catch(console.error)
+      getUserOrganizations()
+        .then(data => {
+            console.log('Fetched organizations:', data)
+            setOrgs(data)
+        })
+        .catch(err => console.error('Failed to fetch orgs:', err))
     }
   }, [user])
 
@@ -33,12 +33,11 @@ export default function WorkspaceSwitcher() {
     try {
       const { access_token } = await switchContext(orgId)
       
-      // * Update the session in AuthProvider
-      // * This requires the AuthProvider to have a method to update the token manually
-      // * or we just reload the page for now (simplest MVP)
+      localStorage.setItem('access_token', access_token) // Note: Client uses 'token', verify this
+      // * Correction: api/client.ts uses 'token', not 'access_token'
+      localStorage.setItem('token', access_token) 
       
-      localStorage.setItem('access_token', access_token)
-      // Hard refresh to re-init auth context with new token
+      // Force reload to pick up new permissions
       window.location.reload() 
       
     } catch (err) {
@@ -64,7 +63,6 @@ export default function WorkspaceSwitcher() {
           </div>
           <span className="text-neutral-700 dark:text-neutral-300">Personal</span>
         </div>
-        {/* TODO: Show CheckIcon if active */}
         {switching === 'personal' && <span className="text-xs text-neutral-400">Loading...</span>}
       </button>
 
