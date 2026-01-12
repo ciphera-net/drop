@@ -20,25 +20,23 @@ export interface OrganizationMember {
 // Create a new organization
 export async function createOrganization(name: string, slug: string): Promise<Organization> {
   // Use authFetch (Authenticated via Ciphera Auth)
-  const res = await authFetch('/api/v1/auth/organizations', {
+  // * Note: authFetch returns the parsed JSON body, not the Response object
+  return await authFetch<Organization>('/auth/organizations', {
     method: 'POST',
     body: JSON.stringify({ name, slug }),
   })
-  return res.json()
 }
 
 // List organizations user belongs to
 export async function getUserOrganizations(): Promise<OrganizationMember[]> {
-  const res = await authFetch('/api/v1/auth/organizations')
-  const data = await res.json()
+  const data = await authFetch<{ organizations: OrganizationMember[] }>('/auth/organizations')
   return data.organizations || []
 }
 
 // Switch Context (Get token for specific org)
 export async function switchContext(organizationId: string | null): Promise<{ access_token: string; expires_in: number }> {
-  const res = await authFetch('/api/v1/auth/switch-context', {
+  return await authFetch<{ access_token: string; expires_in: number }>('/auth/switch-context', {
     method: 'POST',
     body: JSON.stringify({ organization_id: organizationId || '' }),
   })
-  return res.json()
 }
