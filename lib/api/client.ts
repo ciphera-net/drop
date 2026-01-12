@@ -5,6 +5,14 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 export const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:8081'
 
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+  }
+}
+
 /**
  * Base API client with error handling
  */
@@ -79,8 +87,10 @@ async function apiRequest<T>(
               localStorage.removeItem('token')
               localStorage.removeItem('refreshToken')
               localStorage.removeItem('user')
-              window.location.href = '/login'
-              throw new Error('Session expired')
+              // Don't auto-redirect here, let the caller handle the 401 if they want, 
+              // or we can redirect. But throwing 401 allows component to decide (e.g. save return URL)
+              // window.location.href = '/login' 
+              // actually, throwing ApiError(401) is better than redirecting blindly
             }
           } catch (e) {
             // * Network error during refresh or logout
@@ -90,11 +100,11 @@ async function apiRequest<T>(
       }
     }
 
-    const error = await response.json().catch(() => ({
+    const errorBody = await response.json().catch(() => ({
       error: 'Unknown error',
       message: `HTTP ${response.status}: ${response.statusText}`,
     }))
-    throw new Error(error.message || error.error || 'Request failed')
+    throw new ApiError(errorBody.message || errorBody.error || 'Request failed', response.status)
   }
 
   return response.json()

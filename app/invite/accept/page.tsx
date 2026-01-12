@@ -32,8 +32,14 @@ function InviteContent() {
   const [invite, setInvite] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [accepting, setAccepting] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
+    // Check auth
+    if (typeof window !== 'undefined') {
+      setIsAuthenticated(!!localStorage.getItem('token'))
+    }
+
     if (!token) {
       setError('Missing invitation token')
       setLoading(false)
@@ -52,19 +58,20 @@ function InviteContent() {
       })
   }, [token])
 
-  const handleAccept = async () => {
+  const handleAction = async () => {
+    if (!isAuthenticated) {
+      // Redirect to login with return URL
+      router.push(`/login?returnUrl=/invite/accept?token=${token}`)
+      return
+    }
+
     setAccepting(true)
     try {
       await acceptInvitation(token!)
       toast.success('Invitation accepted!')
       router.push('/dashboard')
     } catch (err: any) {
-      // If 401, they need to login. authFetch might handle this or we catch it.
-      // Usually authFetch redirects or throws.
-      // If we are here, it might be other error.
-      // Ideally, we check auth state before showing "Join".
-      // But for now, if it fails, we show error.
-      // If the error is Unauthorized, we should redirect to login with return url.
+      // If 401, they need to login.
       if (err.status === 401) {
          router.push(`/login?returnUrl=/invite/accept?token=${token}`)
       } else {
@@ -120,12 +127,12 @@ function InviteContent() {
 
         <div className="space-y-3">
           <Button 
-            onClick={handleAccept} 
+            onClick={handleAction} 
             disabled={accepting}
             isLoading={accepting}
             className="w-full py-3 text-lg"
           >
-            Accept Invitation
+            {isAuthenticated ? 'Accept Invitation' : 'Sign in to Accept'}
           </Button>
           
           <p className="text-xs text-neutral-500 mt-4">
