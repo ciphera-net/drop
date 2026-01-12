@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/context'
-import { deleteOrganization } from '@/lib/api/organization'
+import { deleteOrganization, switchContext } from '@/lib/api/organization'
 import { toast } from 'sonner'
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
 
@@ -62,38 +62,19 @@ export default function OrganizationSettings() {
       await deleteOrganization(currentOrgId)
       toast.success('Organization deleted successfully')
       
-      // * Switch back to personal context
-      // * We can do this by clearing the token or calling switchContext(null)
-      // * But since the token is invalid now, we should probably just reload/logout or force switch
+      // * Clear sticky session
+      localStorage.removeItem('active_org_id')
       
-      // Force switch to personal
-      // reusing the logic from WorkspaceSwitcher would be ideal, but for now:
-      // We manually clear the token and reload, or call the switch endpoint if it works without a valid token (it doesn't).
-      // Actually, switchContext(null) might fail if the current token is invalid? 
-      // No, the user is still valid, just the org context is gone. 
-      // But the current token is bound to the org. So it might be invalid for further requests?
-      // Usually deleting the resource you are scoped to invalidates the scope.
-      
-      // Safest bet: Refresh full session (Logout might be too aggressive)
-      // Let's try to switch to personal context explicitly using the REFRESH token if available,
-      // or just redirect to dashboard and let the auth error handler kick in (which might log out).
-      
-      // Better: Let's assume the backend allows us to switch to personal even if current org is gone, 
-      // OR we just perform a hard reload which might trigger a 401 and then a refresh to personal?
-      // Actually, if we delete the org, the token claims are now stale/invalid for THAT org.
-      // But the user still exists.
-      
-      // Let's try to use the auth context to "logout" or "refresh"
-      // If we just reload, the current token might cause 404s or 403s.
-      
-      // Let's try to switch to personal context "blindly"
-      localStorage.removeItem('token') // Remove the org-scoped token
-      window.location.href = '/dashboard' // Reloading should trigger a token refresh using the HttpOnly cookie or Refresh Token in localstorage?
-      // Wait, the refresh token is also in localstorage in this app?
-      // Yes, 'refreshToken' is in localStorage.
-      // If we remove 'token', the api client will try to use 'refreshToken' to get a new 'token'.
-      // Since the refresh endpoint issues a new token (usually personal or last context?), 
-      // we need to make sure the refresh logic handles "defaulting" to personal if the previous context is invalid.
+      // * Switch to personal context explicitly
+      try {
+        const { access_token } = await switchContext(null)
+        localStorage.setItem('token', access_token)
+        window.location.href = '/dashboard'
+      } catch (switchErr) {
+        console.error('Failed to switch to personal context after delete:', switchErr)
+        // Fallback: reload and let backend handle invalid token if any
+        window.location.href = '/dashboard'
+      }
       
     } catch (err: any) {
       console.error(err)
