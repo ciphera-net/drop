@@ -17,6 +17,16 @@ export interface OrganizationMember {
   organization_slug?: string
 }
 
+export interface OrganizationInvitation {
+  id: string
+  organization_id: string
+  email: string
+  role: 'owner' | 'admin' | 'member'
+  invited_by: string
+  expires_at: string
+  created_at: string
+}
+
 // Create a new organization
 export async function createOrganization(name: string, slug: string): Promise<Organization> {
   // Use authFetch (Authenticated via Ciphera Auth)
@@ -46,6 +56,27 @@ export async function switchContext(organizationId: string | null): Promise<{ ac
 // Delete an organization
 export async function deleteOrganization(organizationId: string): Promise<void> {
   await authFetch(`/auth/organizations/${organizationId}`, {
+    method: 'DELETE',
+  })
+}
+
+// Send an invitation
+export async function sendInvitation(organizationId: string, email: string, role: string = 'member'): Promise<OrganizationInvitation> {
+  return await authFetch<OrganizationInvitation>(`/auth/organizations/${organizationId}/invites`, {
+    method: 'POST',
+    body: JSON.stringify({ email, role }),
+  })
+}
+
+// List invitations
+export async function getInvitations(organizationId: string): Promise<OrganizationInvitation[]> {
+  const data = await authFetch<{ invitations: OrganizationInvitation[] }>(`/auth/organizations/${organizationId}/invites`)
+  return data.invitations || []
+}
+
+// Revoke invitation
+export async function revokeInvitation(organizationId: string, inviteId: string): Promise<void> {
+  await authFetch(`/auth/organizations/${organizationId}/invites/${inviteId}`, {
     method: 'DELETE',
   })
 }

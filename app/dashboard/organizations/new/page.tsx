@@ -35,7 +35,7 @@ export default function NewOrganizationPage() {
 
     try {
       await createOrganization(formData.name, formData.slug)
-      router.push('/dashboard')
+      router.push(`/dashboard/organizations/${formData.slug}/onboarding`)
       // Force refresh to update organization list in sidebar/menu (if implemented)
       router.refresh()
     } catch (err: any) {
