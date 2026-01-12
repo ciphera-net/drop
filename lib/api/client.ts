@@ -94,4 +94,5 @@ async function apiRequest<T>(
   return response.json()
 }
 
+export const authFetch = apiRequest
 export default apiRequest

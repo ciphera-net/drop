@@ -25,6 +25,7 @@ interface AuthContextType {
   login: (token: string, refreshToken: string, user: User) => void
   logout: () => void
   refresh: () => Promise<void>
+  refreshSession: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   refresh: async () => {},
+  refreshSession: async () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -74,6 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.refresh()
   }, [router, user])
 
+  // New method for session refresh (token refresh is handled by client, this just reloads user/UI state)
+  const refreshSession = useCallback(async () => {
+      // For now, this is alias to refresh + hard reload if needed, 
+      // but WorkspaceSwitcher calls window.location.reload() anyway so this might be redundant.
+      // However, to satisfy the interface:
+      await refresh()
+  }, [refresh])
+
   // Initial load
   useEffect(() => {
     const init = async () => {
@@ -106,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refresh, refreshSession }}>
       {children}
     </AuthContext.Provider>
   )
