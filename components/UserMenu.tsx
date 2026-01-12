@@ -5,10 +5,41 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/context'
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ExitIcon, PersonIcon, GearIcon, DashboardIcon, ChevronDownIcon } from '@radix-ui/react-icons'
+import { ExitIcon, PersonIcon, GearIcon, DashboardIcon, ChevronDownIcon, CubeIcon } from '@radix-ui/react-icons'
 
 // * Import Workspace Switcher
 import WorkspaceSwitcher from './WorkspaceSwitcher'
+
+function OrgSettingsLink({ setIsOpen }: { setIsOpen: (open: boolean) => void }) {
+  const [isOrg, setIsOrg] = useState(false)
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token')
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]))
+                if (payload.org_id) {
+                    setIsOrg(true)
+                }
+            } catch (e) {}
+        }
+    }
+  }, [])
+
+  if (!isOrg) return null
+
+  return (
+    <Link
+      href="/org-settings"
+      onClick={() => setIsOpen(false)}
+      className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+    >
+      <CubeIcon className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white" />
+      Team Settings
+    </Link>
+  )
+}
 
 export default function UserMenu() {
   const { user, loading, logout } = useAuth()
@@ -76,6 +107,9 @@ export default function UserMenu() {
                   <DashboardIcon className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white" />
                   Dashboard
                 </Link>
+                {/* Check if in org context via helper or just conditional rendering if easy */}
+                {/* Since we don't have isOrgContext state here easily without parsing token, let's try to infer it from auth context or let UserMenu check it */}
+                <OrgSettingsLink setIsOpen={setIsOpen} />
                 <Link
                   href="/settings"
                   onClick={() => setIsOpen(false)}
