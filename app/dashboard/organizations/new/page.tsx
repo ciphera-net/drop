@@ -68,7 +68,7 @@ export default function NewOrganizationPage() {
               <CubeIcon className="h-6 w-6" />
             </div>
             <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">
-              Create Team Workspace
+              Create Organization Workspace
             </h1>
           </div>
 

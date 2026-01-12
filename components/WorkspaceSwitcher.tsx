@@ -127,7 +127,7 @@ export default function WorkspaceSwitcher() {
         <div className="h-5 w-5 rounded border border-dashed border-neutral-300 dark:border-neutral-600 flex items-center justify-center">
           <PlusIcon className="h-3 w-3" />
         </div>
-        <span>Create Team</span>
+        <span>Create Organization</span>
       </Link>
     </div>
   )

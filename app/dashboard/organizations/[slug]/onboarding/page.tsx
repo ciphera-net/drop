@@ -137,7 +137,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ slug: str
                 {org.organization_name} is ready!
               </h2>
               <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-lg mx-auto">
-                Your secure workspace has been created. You can now start sharing files securely and managing your team's access.
+                Your secure workspace has been created. You can now start sharing files securely and managing your organization's access.
               </p>
               <Button
                 onClick={() => setStep(2)}
@@ -157,9 +157,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ slug: str
             exit={{ opacity: 0, x: -20 }}
             className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-neutral-200 dark:border-neutral-800 p-8"
           >
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Invite your team</h2>
+            <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Invite your organization members</h2>
             <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-              Collaborate securely by inviting your team members. They'll receive an email to join <strong>{org.organization_name}</strong>.
+              Collaborate securely by inviting your organization members. They'll receive an email to join <strong>{org.organization_name}</strong>.
             </p>
 
             <div className="space-y-3 mb-6">

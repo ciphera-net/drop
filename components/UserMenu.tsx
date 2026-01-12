@@ -36,7 +36,7 @@ function OrgSettingsLink({ setIsOpen }: { setIsOpen: (open: boolean) => void }) 
       className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
     >
       <CubeIcon className="h-4 w-4 text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white" />
-      Team Settings
+      Organization Settings
     </Link>
   )
 }

@@ -35,10 +35,10 @@ export default function OrganizationSettings() {
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Team State
+  // Members State
   const [members, setMembers] = useState<OrganizationMember[]>([])
   const [invitations, setInvitations] = useState<OrganizationInvitation[]>([])
-  const [isLoadingTeam, setIsLoadingTeam] = useState(true)
+  const [isLoadingMembers, setIsLoadingMembers] = useState(true)
   
   // Invite State
   const [inviteEmail, setInviteEmail] = useState('')
@@ -59,7 +59,7 @@ export default function OrganizationSettings() {
 
   const currentOrgId = getOrgIdFromToken()
 
-  const loadTeam = useCallback(async () => {
+  const loadMembers = useCallback(async () => {
     if (!currentOrgId) return
     try {
       const [membersData, invitesData] = await Promise.all([
@@ -69,20 +69,20 @@ export default function OrganizationSettings() {
       setMembers(membersData)
       setInvitations(invitesData)
     } catch (error) {
-      console.error('Failed to load team:', error)
-      // toast.error('Failed to load team members')
+      console.error('Failed to load members:', error)
+      // toast.error('Failed to load members')
     } finally {
-      setIsLoadingTeam(false)
+      setIsLoadingMembers(false)
     }
   }, [currentOrgId])
 
   useEffect(() => {
     if (currentOrgId) {
-      loadTeam()
+      loadMembers()
     } else {
-      setIsLoadingTeam(false)
+      setIsLoadingMembers(false)
     }
-  }, [currentOrgId, loadTeam])
+  }, [currentOrgId, loadMembers])
 
   // If no org ID, we are in personal workspace, so don't show org settings
   if (!currentOrgId) {
@@ -131,7 +131,7 @@ export default function OrganizationSettings() {
       await sendInvitation(currentOrgId, inviteEmail, inviteRole)
       toast.success(`Invitation sent to ${inviteEmail}`)
       setInviteEmail('')
-      loadTeam() // Refresh list
+      loadMembers() // Refresh list
     } catch (error: any) {
       toast.error(error.message || 'Failed to send invitation')
     } finally {
@@ -143,7 +143,7 @@ export default function OrganizationSettings() {
     try {
       await revokeInvitation(currentOrgId, inviteId)
       toast.success('Invitation revoked')
-      loadTeam() // Refresh list
+      loadMembers() // Refresh list
     } catch (error: any) {
       toast.error(error.message || 'Failed to revoke invitation')
     }
@@ -159,7 +159,7 @@ export default function OrganizationSettings() {
       <div>
         <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Organization Settings</h1>
         <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-          Manage your team workspace and members.
+          Manage your organization workspace and members.
         </p>
       </div>
 
@@ -247,7 +247,7 @@ export default function OrganizationSettings() {
               <div className="space-y-12">
                 {/* Invite Section */}
                 <div>
-                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Team Members</h2>
+                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">Organization Members</h2>
                   <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">Manage who has access to this organization.</p>
                   
                   <div className="bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
@@ -286,7 +286,7 @@ export default function OrganizationSettings() {
                 <div className="space-y-4">
                   <h3 className="text-sm font-medium text-neutral-500 uppercase tracking-wider">Active Members</h3>
                   <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden divide-y divide-neutral-200 dark:divide-neutral-800">
-                    {isLoadingTeam ? (
+                    {isLoadingMembers ? (
                       <div className="p-8 text-center text-neutral-500">
                         <div className="animate-spin w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full mx-auto mb-2"></div>
                         Loading members...
