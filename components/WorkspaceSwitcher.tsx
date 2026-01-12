@@ -43,17 +43,21 @@ export default function WorkspaceSwitcher() {
   }, [user])
 
   const handleSwitch = async (orgId: string | null) => {
+    console.log('Switching to workspace:', orgId)
     setSwitching(orgId || 'personal')
     try {
       const { access_token } = await switchContext(orgId)
+      console.log('Received new token:', access_token)
       
       localStorage.setItem('access_token', access_token) // Note: Client uses 'token', verify this
       // * Correction: api/client.ts uses 'token', not 'access_token'
       localStorage.setItem('token', access_token)
       // * Save active org ID for refresh logic
       if (orgId) {
+          console.log('Setting active_org_id:', orgId)
           localStorage.setItem('active_org_id', orgId)
       } else {
+          console.log('Clearing active_org_id')
           localStorage.removeItem('active_org_id')
       }
       
