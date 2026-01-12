@@ -7,6 +7,8 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ExitIcon, PersonIcon, GearIcon, DashboardIcon, ChevronDownIcon } from '@radix-ui/react-icons'
 
+import WorkspaceSwitcher from './WorkspaceSwitcher'
+
 export default function UserMenu() {
   const { user, loading, logout } = useAuth()
   const router = useRouter()
@@ -51,7 +53,7 @@ export default function UserMenu() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.1 }}
-              className="absolute right-0 top-full mt-2 w-56 origin-top-right divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900"
+              className="absolute right-0 top-full mt-2 w-64 origin-top-right divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white shadow-xl ring-1 ring-black/5 focus:outline-none dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 overflow-hidden"
             >
               <div className="px-1 py-1">
                 <div className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">
@@ -60,6 +62,10 @@ export default function UserMenu() {
                 </div>
               </div>
               
+              <div className="px-1 py-1">
+                <WorkspaceSwitcher />
+              </div>
+
               <div className="px-1 py-1">
                 <Link
                   href="/dashboard"
