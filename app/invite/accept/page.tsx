@@ -90,7 +90,7 @@ function InviteContent() {
           <h1 className="text-xl font-bold text-red-600 mb-4">Invitation Error</h1>
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">{error}</p>
           <Link href="/">
-            <Button variant="outline">Go Home</Button>
+            <Button variant="secondary">Go Home</Button>
           </Link>
         </div>
       </div>
