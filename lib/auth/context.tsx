@@ -55,9 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
     setUser(null)
-    router.push('/')
-    router.refresh()
-  }, [router])
+    window.location.href = '/'
+  }, [])
 
   // Reload user data from API
   const refresh = useCallback(async () => {
