@@ -19,7 +19,7 @@ export default function LoadingOverlay() {
         <img 
           src="/ciphera_logo_no_margins.png" 
           alt="Ciphera" 
-          className="h-12 w-auto object-contain"
+          className="h-12 w-auto object-contain dark:invert dark:hue-rotate-180"
         />
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-200 border-t-brand-orange dark:border-neutral-800 dark:border-t-brand-orange" />
       </div>
