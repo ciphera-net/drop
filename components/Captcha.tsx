@@ -22,7 +22,7 @@ export interface CaptchaProps {
   apiUrl?: string
   /**
    * URL to the Ciphera logo image
-   * @default '/ciphera_logo.png'
+   * @default '/ciphera_icon_no_margins.png'
    */
   logoUrl?: string
   /**
@@ -41,7 +41,7 @@ export default function Captcha({
   onVerify, 
   className = '',
   apiUrl,
-  logoUrl = '/ciphera_logo.png',
+  logoUrl = '/ciphera_icon_no_margins.png',
   brandColorClass = 'text-brand-orange focus:ring-brand-orange',
   borderColorClass = 'border-brand-orange'
 }: CaptchaProps) {
