@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth/context'
+import { AUTH_URL } from '@/lib/api/client'
 
 function AuthCallbackContent() {
   const router = useRouter()
@@ -90,7 +91,7 @@ function AuthCallbackContent() {
           Error: {error}
           <div className="mt-4">
             <button 
-                onClick={() => router.push('/login')}
+                onClick={() => window.location.href = `${AUTH_URL}/login`}
                 className="text-sm underline"
             >
                 Back to Login
