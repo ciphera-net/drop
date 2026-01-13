@@ -14,7 +14,7 @@ export default function LoadingOverlay() {
   if (!mounted) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 dark:bg-neutral-950/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white dark:bg-neutral-950 animate-in fade-in duration-200">
       <div className="flex flex-col items-center gap-6">
         <img 
           src="/ciphera_logo_no_margins.png" 
