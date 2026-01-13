@@ -67,7 +67,7 @@ export default function UserMenu() {
     const href = e.currentTarget.href
     setTimeout(() => {
       window.location.href = href
-    }, 800)
+    }, 500)
   }
 
   if (loading) {
