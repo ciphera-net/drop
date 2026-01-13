@@ -6,6 +6,18 @@
 // Use AUTH_API_URL for API calls (Backend)
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 export const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000'
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001' // Default frontend port
+
+export function getLoginUrl(redirectPath = '/auth/callback') {
+  const redirectUri = encodeURIComponent(`${APP_URL}${redirectPath}`)
+  return `${AUTH_URL}/login?client_id=drop-app&redirect_uri=${redirectUri}&response_type=code`
+}
+
+export function getSignupUrl(redirectPath = '/auth/callback') {
+  const redirectUri = encodeURIComponent(`${APP_URL}${redirectPath}`)
+  return `${AUTH_URL}/signup?client_id=drop-app&redirect_uri=${redirectUri}&response_type=code`
+}
+
 export const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:8081'
 
 export class ApiError extends Error {

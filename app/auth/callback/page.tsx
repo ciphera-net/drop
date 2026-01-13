@@ -29,7 +29,8 @@ function AuthCallbackContent() {
                 email: payload.email || 'user@ciphera.net',
                 totp_enabled: payload.totp_enabled || false
             })
-            router.push('/dashboard')
+            const returnTo = searchParams.get('returnTo') || '/dashboard'
+            router.push(returnTo)
         } catch (e) {
             setError('Invalid token received')
         }

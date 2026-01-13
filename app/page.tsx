@@ -8,7 +8,7 @@ import FileRequest from '../components/FileRequest'
 import ShareLink from '../components/ShareLink'
 import LoadingOverlay from '../components/LoadingOverlay'
 import { useAuth } from '@/lib/auth/context'
-import { AUTH_URL } from '@/lib/api/client'
+import { AUTH_URL, getLoginUrl, getSignupUrl } from '@/lib/api/client'
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -127,13 +127,13 @@ export default function HomePage() {
                     
                     <div className="w-full max-w-xs space-y-3">
                       <a 
-                        href={`${AUTH_URL}/login`} 
+                        href={getLoginUrl()} 
                         className="btn-primary block w-full text-center"
                       >
                         Log In
                       </a>
                       <a 
-                        href={`${AUTH_URL}/signup`} 
+                        href={getSignupUrl()} 
                         className="btn-secondary block w-full text-center"
                       >
                         Create Account
