@@ -60,15 +60,7 @@ export default function UserMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  if (loading && !user) {
-    return (
-      <div className="flex h-9 items-center gap-2 rounded-full border border-neutral-200 bg-white p-1 pl-2 pr-3 dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-neutral-100 dark:bg-neutral-800" />
-        <div className="hidden h-4 w-24 shrink-0 animate-pulse rounded bg-neutral-100 sm:block dark:bg-neutral-800" />
-        <div className="h-4 w-4 shrink-0 animate-pulse rounded bg-neutral-100 dark:bg-neutral-800" />
-      </div>
-    )
-  }
+  if (loading && !user) return null
 
   if (user) {
     return (
