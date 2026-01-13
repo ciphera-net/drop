@@ -57,7 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
-    setUser(null)
+    // * Don't set user to null here to prevent protected routes from redirecting to /login before we navigate away
+    // setUser(null)
     
     setTimeout(() => {
       window.location.href = '/'
