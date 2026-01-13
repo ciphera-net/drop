@@ -16,6 +16,26 @@ function AuthCallbackContent() {
     // * Prevent double execution (React Strict Mode or fast re-renders)
     if (processedRef.current) return
     
+    // * Check for direct token passing (from auth-frontend direct login)
+    const token = searchParams.get('token')
+    const refreshToken = searchParams.get('refresh_token')
+    
+    if (token && refreshToken) {
+        processedRef.current = true
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]))
+            login(token, refreshToken, {
+                id: payload.sub,
+                email: payload.email || 'user@ciphera.net',
+                totp_enabled: payload.totp_enabled || false
+            })
+            router.push('/dashboard')
+        } catch (e) {
+            setError('Invalid token received')
+        }
+        return
+    }
+
     const code = searchParams.get('code')
     const state = searchParams.get('state')
     
