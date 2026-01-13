@@ -40,8 +40,8 @@ function AuthCallbackContent() {
 
     const exchangeCode = async () => {
       try {
-        const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:8081'
-        const res = await fetch(`${authUrl}/oauth/token`, {
+        const authApiUrl = process.env.NEXT_PUBLIC_AUTH_API_URL || process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:8081'
+        const res = await fetch(`${authApiUrl}/oauth/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

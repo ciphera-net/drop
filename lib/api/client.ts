@@ -2,8 +2,11 @@
  * HTTP client wrapper for API calls
  */
 
+// Use AUTH_URL for redirects (Frontend UI)
+// Use AUTH_API_URL for API calls (Backend)
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
-export const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:8081'
+export const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000'
+export const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:8081'
 
 export class ApiError extends Error {
   status: number
@@ -22,7 +25,7 @@ async function apiRequest<T>(
 ): Promise<T> {
   // * Determine base URL
   const isAuthRequest = endpoint.startsWith('/auth')
-  const baseUrl = isAuthRequest ? AUTH_URL : API_URL
+  const baseUrl = isAuthRequest ? AUTH_API_URL : API_URL
   const url = `${baseUrl}/api/v1${endpoint}`
   
   const headers: HeadersInit = {
@@ -55,7 +58,7 @@ async function apiRequest<T>(
             // * Get active org ID to preserve context
             const activeOrgId = localStorage.getItem('active_org_id')
             
-            const refreshRes = await fetch(`${AUTH_URL}/api/v1/auth/refresh`, {
+            const refreshRes = await fetch(`${AUTH_API_URL}/api/v1/auth/refresh`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
