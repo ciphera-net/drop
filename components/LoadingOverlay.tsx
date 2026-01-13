@@ -15,8 +15,13 @@ export default function LoadingOverlay() {
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/50 dark:bg-neutral-950/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-200 border-t-brand-orange dark:border-neutral-800 dark:border-t-brand-orange" />
+      <div className="flex flex-col items-center gap-6">
+        <img 
+          src="/ciphera_logo_no_margins.png" 
+          alt="Ciphera" 
+          className="h-12 w-auto object-contain"
+        />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-200 border-t-brand-orange dark:border-neutral-800 dark:border-t-brand-orange" />
       </div>
     </div>,
     document.body
