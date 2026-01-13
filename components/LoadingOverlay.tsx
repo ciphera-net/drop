@@ -3,7 +3,15 @@
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function LoadingOverlay() {
+interface LoadingOverlayProps {
+  logoSrc?: string
+  title?: string
+}
+
+export default function LoadingOverlay({ 
+  logoSrc = "/ciphera_icon_no_margins.png", 
+  title = "Ciphera" 
+}: LoadingOverlayProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -18,12 +26,12 @@ export default function LoadingOverlay() {
       <div className="flex flex-col items-center gap-6">
         <div className="flex items-center gap-3">
           <img 
-            src="/ciphera_icon_no_margins.png" 
-            alt="Ciphera" 
+            src={logoSrc} 
+            alt={title} 
             className="h-12 w-auto object-contain"
           />
           <span className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
-            Ciphera
+            {title}
           </span>
         </div>
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-200 border-t-brand-orange dark:border-neutral-800 dark:border-t-brand-orange" />

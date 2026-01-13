@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import apiRequest from '@/lib/api/client'
+import LoadingOverlay from '@/components/LoadingOverlay'
 
 interface UserPreferences {
   email_notifications: {
@@ -40,6 +41,7 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const router = useRouter()
 
   const login = (token: string, refreshToken: string, userData: User) => {
@@ -51,11 +53,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = useCallback(() => {
+    setIsLoggingOut(true)
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
     setUser(null)
-    window.location.href = '/'
+    
+    setTimeout(() => {
+      window.location.href = '/'
+    }, 500)
   }, [])
 
   // Reload user data from API
@@ -116,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, refresh, refreshSession }}>
+      {isLoggingOut && <LoadingOverlay logoSrc="/drop_icon_no_margins.png" title="Drop" />}
       {children}
     </AuthContext.Provider>
   )
