@@ -7,6 +7,7 @@ import { AUTH_URL } from '@/lib/api/client'
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ExitIcon, PersonIcon, GearIcon, DashboardIcon, ChevronDownIcon, CubeIcon } from '@radix-ui/react-icons'
+import LoadingOverlay from './LoadingOverlay'
 
 // * Import Workspace Switcher
 import WorkspaceSwitcher from './WorkspaceSwitcher'
@@ -46,6 +47,7 @@ export default function UserMenu() {
   const { user, loading, logout } = useAuth()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Close menu when clicking outside
@@ -58,6 +60,15 @@ export default function UserMenu() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  const handleAuthNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    setIsNavigating(true)
+    const href = e.currentTarget.href
+    setTimeout(() => {
+      window.location.href = href
+    }, 300)
+  }
 
   if (loading) {
     return (
@@ -141,19 +152,24 @@ export default function UserMenu() {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <a
-        href={`${AUTH_URL}/login`}
-        className="text-sm font-medium text-neutral-600 hover:text-neutral-900 px-4 py-2 rounded-xl hover:bg-neutral-100/50 transition-all duration-200 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800/50"
-      >
-        Sign in
-      </a>
-      <a
-        href={`${AUTH_URL}/signup`}
-        className="btn-primary text-sm px-5 py-2.5"
-      >
-        Sign up
-      </a>
-    </div>
+    <>
+      {isNavigating && <LoadingOverlay />}
+      <div className="flex items-center gap-3">
+        <a
+          href={`${AUTH_URL}/login`}
+          onClick={handleAuthNavigation}
+          className="text-sm font-medium text-neutral-600 hover:text-neutral-900 px-4 py-2 rounded-xl hover:bg-neutral-100/50 transition-all duration-200 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800/50"
+        >
+          Sign in
+        </a>
+        <a
+          href={`${AUTH_URL}/signup`}
+          onClick={handleAuthNavigation}
+          className="btn-primary text-sm px-5 py-2.5"
+        >
+          Sign up
+        </a>
+      </div>
+    </>
   )
 }

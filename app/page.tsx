@@ -6,15 +6,26 @@ import Link from 'next/link'
 import FileUpload from '../components/FileUpload'
 import FileRequest from '../components/FileRequest'
 import ShareLink from '../components/ShareLink'
+import LoadingOverlay from '../components/LoadingOverlay'
 import { useAuth } from '@/lib/auth/context'
 import { AUTH_URL } from '@/lib/api/client'
 
 export default function HomePage() {
   const { user } = useAuth()
   const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
   
   // * 'send' | 'receive' mode state
   const [mode, setMode] = useState<'send' | 'receive'>('send')
+
+  const handleAuthNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    setIsNavigating(true)
+    const href = e.currentTarget.href
+    setTimeout(() => {
+      window.location.href = href
+    }, 300)
+  }
 
   const [text, setText] = useState('Share')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -56,6 +67,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 pt-12 pb-32 relative overflow-hidden bg-white dark:bg-neutral-950 transition-colors duration-300">
+      {isNavigating && <LoadingOverlay />}
       <div className="max-w-2xl w-full space-y-8 relative z-10">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-neutral-900 dark:text-white mb-4">
@@ -127,12 +139,14 @@ export default function HomePage() {
                     <div className="w-full max-w-xs space-y-3">
                       <a 
                         href={`${AUTH_URL}/login`} 
+                        onClick={handleAuthNavigation}
                         className="btn-primary block w-full text-center"
                       >
                         Log In
                       </a>
                       <a 
                         href={`${AUTH_URL}/signup`} 
+                        onClick={handleAuthNavigation}
                         className="btn-secondary block w-full text-center"
                       >
                         Create Account
