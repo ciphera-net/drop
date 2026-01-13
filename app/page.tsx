@@ -24,7 +24,7 @@ export default function HomePage() {
     const href = e.currentTarget.href
     setTimeout(() => {
       window.location.href = href
-    }, 300)
+    }, 800)
   }
 
   const [text, setText] = useState('Share')
