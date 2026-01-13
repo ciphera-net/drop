@@ -8,7 +8,7 @@ import FileRequest from '../components/FileRequest'
 import ShareLink from '../components/ShareLink'
 import LoadingOverlay from '../components/LoadingOverlay'
 import { useAuth } from '@/lib/auth/context'
-import { AUTH_URL, getLoginUrl, getSignupUrl } from '@/lib/api/client'
+import { initiateOAuthFlow, initiateSignupFlow } from '@/lib/api/oauth'
 
 export default function HomePage() {
   const { user } = useAuth()
@@ -126,18 +126,18 @@ export default function HomePage() {
                     </p>
                     
                     <div className="w-full max-w-xs space-y-3">
-                      <a 
-                        href={getLoginUrl()} 
+                      <button 
+                        onClick={() => initiateOAuthFlow()} 
                         className="btn-primary block w-full text-center"
                       >
                         Log In
-                      </a>
-                      <a 
-                        href={getSignupUrl()} 
+                      </button>
+                      <button 
+                        onClick={() => initiateSignupFlow()} 
                         className="btn-secondary block w-full text-center"
                       >
                         Create Account
-                      </a>
+                      </button>
                     </div>
                   </div>
                 )}

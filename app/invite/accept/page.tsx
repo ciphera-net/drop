@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@ciphera-net/ui'
-import { authFetch, AUTH_URL, getLoginUrl } from '@/lib/api/client'
+import { authFetch, AUTH_URL } from '@/lib/api/client'
+import { initiateOAuthFlow } from '@/lib/api/oauth'
 import Link from 'next/link'
 
 // We need a specific API call for the public invite info
@@ -62,7 +63,7 @@ function InviteContent() {
     if (!isAuthenticated) {
       // Redirect to login with return URL
       const returnPath = `/invite/accept?token=${token}`
-      window.location.href = getLoginUrl(`/auth/callback?returnTo=${encodeURIComponent(returnPath)}`)
+      initiateOAuthFlow(`/auth/callback?returnTo=${encodeURIComponent(returnPath)}`)
       return
     }
 
@@ -75,7 +76,7 @@ function InviteContent() {
       // If 401, they need to login.
       if (err.status === 401) {
          const returnPath = `/invite/accept?token=${token}`
-         window.location.href = getLoginUrl(`/auth/callback?returnTo=${encodeURIComponent(returnPath)}`)
+         initiateOAuthFlow(`/auth/callback?returnTo=${encodeURIComponent(returnPath)}`)
       } else {
          toast.error(err.message || 'Failed to accept invitation')
       }
