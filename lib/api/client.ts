@@ -28,6 +28,19 @@ export class ApiError extends Error {
   }
 }
 
+// * Mutex for token refresh
+let isRefreshing = false
+let refreshSubscribers: ((token: string) => void)[] = []
+
+function subscribeToTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb)
+}
+
+function onRefreshed(token: string) {
+  refreshSubscribers.map((cb) => cb(token))
+  refreshSubscribers = []
+}
+
 /**
  * Base API client with error handling
  */
@@ -66,6 +79,34 @@ async function apiRequest<T>(
         
         // * Prevent infinite loop: Don't refresh if the failed request WAS a refresh request
         if (refreshToken && !endpoint.includes('/auth/refresh')) {
+          if (isRefreshing) {
+            // * If refresh is already in progress, wait for it to complete
+            return new Promise((resolve, reject) => {
+              subscribeToTokenRefresh(async (newToken) => {
+                // Retry original request with new token
+                const newHeaders = {
+                  ...headers,
+                  'Authorization': `Bearer ${newToken}`,
+                }
+                try {
+                  const retryResponse = await fetch(url, {
+                    ...options,
+                    headers: newHeaders,
+                  })
+                  if (retryResponse.ok) {
+                    resolve(retryResponse.json())
+                  } else {
+                    reject(new ApiError('Retry failed', retryResponse.status))
+                  }
+                } catch (e) {
+                  reject(e)
+                }
+              })
+            })
+          }
+
+          isRefreshing = true
+
           try {
             // * Get active org ID to preserve context
             const activeOrgId = localStorage.getItem('active_org_id')
@@ -83,6 +124,9 @@ async function apiRequest<T>(
               const data = await refreshRes.json()
               localStorage.setItem('token', data.access_token)
               localStorage.setItem('refreshToken', data.refresh_token) // Rotation
+              
+              // Notify waiting requests
+              onRefreshed(data.access_token)
 
               // * Retry original request with new token
               const newHeaders = {
@@ -110,6 +154,8 @@ async function apiRequest<T>(
           } catch (e) {
             // * Network error during refresh or logout
             throw e
+          } finally {
+            isRefreshing = false
           }
         }
       }
