@@ -8,27 +8,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ExitIcon, PersonIcon, GearIcon, DashboardIcon, ChevronDownIcon, CubeIcon } from '@radix-ui/react-icons'
 import LoadingOverlay from './LoadingOverlay'
 import { initiateOAuthFlow, initiateSignupFlow } from '@/lib/api/oauth'
+import { getUserOrganizations, OrganizationMember } from '@/lib/api/organization'
 
 // * Import Workspace Switcher
 import WorkspaceSwitcher from './WorkspaceSwitcher'
 
-function OrgSettingsLink({ setIsOpen }: { setIsOpen: (open: boolean) => void }) {
-  const [isOrg, setIsOrg] = useState(false)
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token')
-        if (token) {
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]))
-                if (payload.org_id) {
-                    setIsOrg(true)
-                }
-            } catch (e) {}
-        }
-    }
-  }, [])
-
+function OrgSettingsLink({ setIsOpen, isOrg }: { setIsOpen: (open: boolean) => void; isOrg: boolean }) {
   if (!isOrg) return null
 
   return (
@@ -48,6 +33,33 @@ export default function UserMenu() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  
+  // Lifted state for organizations and active org
+  const [orgs, setOrgs] = useState<OrganizationMember[]>([])
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(null)
+
+  // Fetch data on mount/user change so it's ready when menu opens
+  useEffect(() => {
+    if (user) {
+        // Parse token for active org
+        if (typeof window !== 'undefined') {
+            const token = localStorage.getItem('token')
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]))
+                    setActiveOrgId(payload.org_id || null)
+                } catch (e) {
+                    console.error('Failed to parse token', e)
+                }
+            }
+        }
+
+        // Fetch organizations
+        getUserOrganizations()
+            .then(setOrgs)
+            .catch(err => console.error('Failed to fetch orgs in UserMenu', err))
+    }
+  }, [user])
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -93,7 +105,7 @@ export default function UserMenu() {
               </div>
               
               <div className="px-1 py-1">
-                <WorkspaceSwitcher />
+                <WorkspaceSwitcher orgs={orgs} activeOrgId={activeOrgId} />
               </div>
 
               <div className="px-1 py-1">
@@ -107,7 +119,7 @@ export default function UserMenu() {
                 </Link>
                 {/* Check if in org context via helper or just conditional rendering if easy */}
                 {/* Since we don't have isOrgContext state here easily without parsing token, let's try to infer it from auth context or let UserMenu check it */}
-                <OrgSettingsLink setIsOpen={setIsOpen} />
+                <OrgSettingsLink setIsOpen={setIsOpen} isOrg={!!activeOrgId} />
                 <Link
                   href="/settings"
                   onClick={() => setIsOpen(false)}

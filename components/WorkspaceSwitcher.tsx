@@ -1,47 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PlusIcon, PersonIcon, CubeIcon, CheckIcon } from '@radix-ui/react-icons'
-import { getUserOrganizations, switchContext, OrganizationMember } from '@/lib/api/organization'
-import { useAuth } from '@/lib/auth/context'
+import { switchContext, OrganizationMember } from '@/lib/api/organization'
 import Link from 'next/link'
 
-export default function WorkspaceSwitcher() {
-  const auth = useAuth()
-  // * Defensive: fallback to refresh if refreshSession is missing (e.g. during migration/caching)
-  const refreshSession = auth.refreshSession || auth.refresh 
-  const { user } = auth
-  
+export default function WorkspaceSwitcher({ orgs, activeOrgId }: { orgs: OrganizationMember[], activeOrgId: string | null }) {
   const router = useRouter()
-  const [orgs, setOrgs] = useState<OrganizationMember[]>([])
   const [switching, setSwitching] = useState<string | null>(null)
-  const [activeOrgId, setActiveOrgId] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Parse token to get active org ID
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token')
-        if (token) {
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]))
-                setActiveOrgId(payload.org_id || null)
-            } catch (e) {
-                console.error('Failed to parse token for workspace state', e)
-            }
-        }
-    }
-
-    if (user) {
-      getUserOrganizations()
-        .then(data => {
-            console.log('Fetched organizations:', data)
-            setOrgs(data)
-        })
-        .catch(err => console.error('Failed to fetch orgs:', err))
-    }
-  }, [user])
-
+  
   const handleSwitch = async (orgId: string | null) => {
     console.log('Switching to workspace:', orgId)
     setSwitching(orgId || 'personal')
