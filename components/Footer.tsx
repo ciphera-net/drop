@@ -14,7 +14,6 @@ export default function Footer() {
         LinkComponent={Link}
         onFeedbackClick={() => setShowFeedback(true)}
         appName="Ciphera Drop"
-        aboutText="Why Drop"
       />
       <FeedbackModal 
         isOpen={showFeedback} 
