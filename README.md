@@ -44,7 +44,6 @@ This modular design ensures that cryptographic operations (Client) are strictly 
 ### Prerequisites
 
 - Node.js 18+ and npm/pnpm
-- **Backend API**: The official Ciphera backend is proprietary. To self-host this frontend, you must implement your own backend service that complies with our [API Documentation](docs/API.md).
 
 ### Installation
 
