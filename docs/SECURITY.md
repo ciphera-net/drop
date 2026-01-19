@@ -56,7 +56,7 @@ This ensures that even if the TLS connection is stripped or the Auth Server logs
 
 ### Infrastructure
 
-- **Frontend**: Hosted on Vercel (Global Edge Network)
+- **Frontend**: Hosted on Railway
 - **Backend API**: Hosted on Railway (encapsulated container environment)
 - **Auth Service**: Hosted on Railway (isolated service)
 - **Database**: Railway PostgreSQL (encrypted at rest)

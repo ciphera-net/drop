@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "echo 'Skipping prebuild on Vercel'",
+    "prebuild": "echo 'Skipping prebuild on Railway'",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",

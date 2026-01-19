@@ -2,7 +2,7 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-green.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js-blue.svg?logo=next.js&logoColor=white)](https://nextjs.org/)
-[![Powered by Vercel](https://img.shields.io/badge/Powered%20by-Vercel-orange.svg?logo=vercel&logoColor=white)](https://vercel.com/)
+[![Powered by Railway](https://img.shields.io/badge/Powered%20by-Railway-orange.svg?logo=railway&logoColor=white)](https://railway.app/)
 
 Drop is a privacy-first file sharing application that encrypts files client-side before upload, ensuring that even the service provider cannot access user data.
 
@@ -33,7 +33,7 @@ This modular design ensures that cryptographic operations (Client) are strictly 
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Encryption**: Web Crypto API (AES-256-GCM)
-- **Hosting**: Vercel
+- **Hosting**: Railway
 - **Infrastructure**: Railway (PostgreSQL), Cloudflare R2 (Storage)
 - **Shared Packages**:
   - `@ciphera-net/ui` - Shared UI components

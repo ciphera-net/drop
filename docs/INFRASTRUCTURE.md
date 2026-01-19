@@ -11,9 +11,13 @@ Ciphera follows a microservices architecture with a strict separation between Au
 | Service | Technology | Hosting | Purpose |
 | :--- | :--- | :--- | :--- |
 | **Ciphera Auth** | Go (Gin) | Railway | Identity Provider, OAuth2, JWT Issuance |
+| **Auth Frontend** | Next.js (React) | Railway | Authentication UI, Login/Signup flows |
 | **Drop Backend** | Go (Gin) | Railway | File Metadata, Upload/Download orchestration |
-| **Drop Frontend** | Next.js (React) | Vercel | User Interface, Client-side Encryption |
+| **Drop Frontend** | Next.js (React) | Railway | User Interface, Client-side Encryption |
+| **Analytics Backend** | Go (Gin) | Railway | Analytics event ingestion and queries |
+| **Analytics Frontend** | Next.js (React) | Railway | Analytics dashboard interface |
 | **Ciphera Captcha** | Go (Gin) | Railway | Bot Protection, PoW/Visual Captcha Verification |
+| **Website** | Next.js (React) | Railway | Marketing website |
 | **Ciphera Relay** | Stalwart Mail | Hetzner Cloud (VPS) | Transactional Email Delivery (SMTP) |
 | **Database** | PostgreSQL | Railway | Relational Data (Users, Metadata) |
 | **Storage** | Cloudflare R2 | Cloudflare | Encrypted File Blobs (S3 Compatible) |
@@ -72,6 +76,33 @@ Ciphera follows a microservices architecture with a strict separation between Au
   - `NEXT_PUBLIC_CAPTCHA_API_URL`: `https://captcha.ciphera.net/api/v1`
 - **Dependencies**:
   - `@ciphera-net/captcha`: Shared captcha UI component from `ciphera-captcha/ui`
+
+### Auth Frontend (`auth-frontend`)
+- **Repo**: `ciphera-drop/auth-frontend`
+- **Env Vars**:
+  - `NEXT_PUBLIC_AUTH_API_URL`: `https://auth.ciphera.net`
+  - `NEXT_PUBLIC_APP_URL`: `https://auth.ciphera.net`
+
+### Analytics Backend (`analytics-backend`)
+- **Repo**: `ciphera-drop/analytics-backend`
+- **Env Vars**:
+  - `DATABASE_URL`: Connection to Railway Postgres
+  - `JWT_SECRET`: Shared secret with ciphera-auth
+  - `CORS_ORIGIN`: Allowed CORS origins (comma-separated)
+  - `PORT`: Server port (default: 8082)
+
+### Analytics Frontend (`analytics-frontend`)
+- **Repo**: `ciphera-drop/analytics`
+- **Env Vars**:
+  - `NEXT_PUBLIC_API_URL`: `https://analytics-api.ciphera.net`
+  - `NEXT_PUBLIC_AUTH_URL`: `https://auth.ciphera.net`
+  - `NEXT_PUBLIC_AUTH_API_URL`: `https://auth.ciphera.net`
+  - `NEXT_PUBLIC_APP_URL`: `https://analytics.ciphera.net`
+
+### Website (`website`)
+- **Repo**: `ciphera-drop/website`
+- **Env Vars**:
+  - Environment variables as needed for the marketing site
 
 ## Monitoring & Maintenance
 
