@@ -14,8 +14,8 @@ Ciphera follows a microservices architecture with a strict separation between Au
 | **Auth Frontend** | Next.js (React) | Railway | Authentication UI, Login/Signup flows |
 | **Drop Backend** | Go (Gin) | Railway | File Metadata, Upload/Download orchestration |
 | **Drop Frontend** | Next.js (React) | Railway | User Interface, Client-side Encryption |
-| **Analytics Backend** | Go (Gin) | Railway | Analytics event ingestion and queries |
-| **Analytics Frontend** | Next.js (React) | Railway | Analytics dashboard interface |
+| **Pulse Backend** | Go (Gin) | Railway | Pulse event ingestion and queries |
+| **Pulse Frontend** | Next.js (React) | Railway | Pulse dashboard interface |
 | **Ciphera Captcha** | Go (Gin) | Railway | Bot Protection, PoW/Visual Captcha Verification |
 | **Website** | Next.js (React) | Railway | Marketing website |
 | **Ciphera Relay** | Stalwart Mail | Hetzner Cloud (VPS) | Transactional Email Delivery (SMTP) |
@@ -83,7 +83,7 @@ Ciphera follows a microservices architecture with a strict separation between Au
   - `NEXT_PUBLIC_AUTH_API_URL`: `https://auth.ciphera.net`
   - `NEXT_PUBLIC_APP_URL`: `https://auth.ciphera.net`
 
-### Analytics Backend (`analytics-backend`)
+### Pulse Backend (`analytics-backend`)
 - **Repo**: `ciphera-drop/analytics-backend`
 - **Env Vars**:
   - `DATABASE_URL`: Connection to Railway Postgres
@@ -91,13 +91,13 @@ Ciphera follows a microservices architecture with a strict separation between Au
   - `CORS_ORIGIN`: Allowed CORS origins (comma-separated)
   - `PORT`: Server port (default: 8082)
 
-### Analytics Frontend (`analytics-frontend`)
+### Pulse Frontend (`analytics-frontend`)
 - **Repo**: `ciphera-drop/analytics`
 - **Env Vars**:
   - `NEXT_PUBLIC_API_URL`: `https://analytics-api.ciphera.net`
   - `NEXT_PUBLIC_AUTH_URL`: `https://auth.ciphera.net`
   - `NEXT_PUBLIC_AUTH_API_URL`: `https://auth.ciphera.net`
-  - `NEXT_PUBLIC_APP_URL`: `https://analytics.ciphera.net`
+  - `NEXT_PUBLIC_APP_URL`: `https://pulse.ciphera.net`
 
 ### Website (`website`)
 - **Repo**: `ciphera-drop/website`
