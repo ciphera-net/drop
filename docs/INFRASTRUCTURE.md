@@ -83,18 +83,18 @@ Ciphera follows a microservices architecture with a strict separation between Au
   - `NEXT_PUBLIC_AUTH_API_URL`: `https://auth.ciphera.net`
   - `NEXT_PUBLIC_APP_URL`: `https://auth.ciphera.net`
 
-### Pulse Backend (`analytics-backend`)
-- **Repo**: `ciphera-drop/analytics-backend`
+### Pulse Backend (`pulse-backend`)
+- **Repo**: `ciphera-drop/pulse-backend`
 - **Env Vars**:
   - `DATABASE_URL`: Connection to Railway Postgres
   - `JWT_SECRET`: Shared secret with ciphera-auth
   - `CORS_ORIGIN`: Allowed CORS origins (comma-separated)
   - `PORT`: Server port (default: 8082)
 
-### Pulse Frontend (`analytics-frontend`)
-- **Repo**: `ciphera-drop/analytics`
+### Pulse Frontend (`pulse`)
+- **Repo**: `ciphera-drop/pulse`
 - **Env Vars**:
-  - `NEXT_PUBLIC_API_URL`: `https://analytics-api.ciphera.net`
+  - `NEXT_PUBLIC_API_URL`: `https://pulse-api.ciphera.net`
   - `NEXT_PUBLIC_AUTH_URL`: `https://auth.ciphera.net`
   - `NEXT_PUBLIC_AUTH_API_URL`: `https://auth.ciphera.net`
   - `NEXT_PUBLIC_APP_URL`: `https://pulse.ciphera.net`
