@@ -18,7 +18,7 @@ Ciphera follows a microservices architecture with a strict separation between Au
 | **Pulse Frontend** | Next.js (React) | Railway | Pulse dashboard interface |
 | **Ciphera Captcha** | Go (Gin) | Railway | Bot Protection, PoW/Visual Captcha Verification |
 | **Website** | Next.js (React) | Railway | Marketing website |
-| **Ciphera Relay** | Stalwart Mail | Hetzner Cloud (VPS) | Transactional Email Delivery (SMTP) |
+| **Ciphera Relay** | Stalwart Mail | Infomaniak Public Cloud | Transactional Email Delivery (SMTP) |
 | **Database** | PostgreSQL | Railway | Relational Data (Users, Metadata) |
 | **Storage** | Cloudflare R2 | Cloudflare | Encrypted File Blobs (S3 Compatible) |
 
@@ -47,16 +47,16 @@ Ciphera follows a microservices architecture with a strict separation between Au
 ### Mail Server (`ciphera-relay`)
 - **Repo**: `ciphera-relay` (Separate Repo)
 - **Software**: Stalwart Mail Server (Docker).
-- **Location**: Hetzner Cloud (Falkenstein).
+- **Location**: Infomaniak (Switzerland).
 - **IP Address**: Static IPv4.
 - **Ports**: 
   - `25` (SMTP Inbound/Outbound)
   - `587` (Submission + STARTTLS)
   - `465` (SMTPS)
   - `993` (IMAPS)
-  - `8080` (Admin UI - Localhost Bound)
+  - `8081` (Admin UI - Exposed to Docker Network)
 - **Security**:
-  - Admin UI bound to `127.0.0.1` (Requires SSH Tunnel).
+  - Admin UI bound to `0.0.0.0:8081` (Protected by Nginx Proxy Manager).
   - SPF/DKIM/DMARC configured in Cloudflare DNS.
   - Reverse DNS (PTR) set to `relay.ciphera.net`.
 
