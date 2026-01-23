@@ -17,6 +17,8 @@ interface User {
   id: string
   email: string
   totp_enabled: boolean
+  org_id?: string
+  role?: string
   preferences?: UserPreferences
 }
 
