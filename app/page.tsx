@@ -56,7 +56,7 @@ export default function HomePage() {
   }, [text, isDeleting, wordIndex])
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 pt-12 pb-32 relative overflow-hidden bg-white dark:bg-neutral-950 transition-colors duration-300">
+    <main className="min-h-screen flex items-center justify-center p-4 pt-12 pb-32 relative overflow-hidden transition-colors duration-300">
       <div className="max-w-2xl w-full space-y-8 relative z-10">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-neutral-900 dark:text-white mb-4">
