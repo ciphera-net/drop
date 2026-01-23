@@ -791,7 +791,7 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
             <PasswordInput
               label="Password protection"
               value={password}
-              onChange={setPassword}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Optional password"
               disabled={uploading}
             />

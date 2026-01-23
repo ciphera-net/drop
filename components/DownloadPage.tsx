@@ -199,8 +199,8 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
             <PasswordInput
               label="Password Protection"
               value={password}
-              onChange={(value) => {
-                setPassword(value)
+              onChange={(e) => {
+                setPassword(e.target.value)
                 if (error === 'Password is required to download this file') setError(null)
               }}
               placeholder={isPasswordProtected ? "Enter password to unlock" : "Enter password (if required)"}
