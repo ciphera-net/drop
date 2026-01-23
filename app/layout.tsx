@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   creator: 'Ciphera',
   publisher: 'Ciphera',
   icons: {
-    icon: '/drop_icon_no_margins.png',
-    shortcut: '/drop_icon_no_margins.png',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
     apple: '/drop_icon_no_margins.png',
   },
   // * Privacy-first: No tracking
