@@ -16,7 +16,7 @@ import { formatBytes } from '../lib/utils/format'
 import { useKeyboardShortcuts } from '../lib/hooks/useKeyboardShortcuts'
 
 import { Button, Input } from '@ciphera-net/ui'
-import PasswordInput from './PasswordInput'
+import { PasswordInput } from '@ciphera-net/ui'
 import Captcha from './Captcha'
 
 interface FileUploadProps {

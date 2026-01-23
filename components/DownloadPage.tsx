@@ -8,7 +8,7 @@ import { decryptFile, decryptString, base64ToArrayBuffer } from '../lib/crypto/e
 import { decodeKeyFromSharing, importEncryptionKey } from '../lib/crypto/key-management'
 
 import { Button, Input } from '@ciphera-net/ui'
-import PasswordInput from './PasswordInput'
+import { PasswordInput } from '@ciphera-net/ui'
 
 interface DownloadPageProps {
   shareId: string

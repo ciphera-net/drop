@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import apiRequest from '@/lib/api/client'
-import LoadingOverlay from '@/components/LoadingOverlay'
+import { LoadingOverlay } from '@ciphera-net/ui'
 
 interface UserPreferences {
   email_notifications: {

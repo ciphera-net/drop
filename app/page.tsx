@@ -6,7 +6,7 @@ import Link from 'next/link'
 import FileUpload from '../components/FileUpload'
 import FileRequest from '../components/FileRequest'
 import ShareLink from '../components/ShareLink'
-import LoadingOverlay from '../components/LoadingOverlay'
+import { LoadingOverlay } from '@ciphera-net/ui'
 import { useAuth } from '@/lib/auth/context'
 import { initiateOAuthFlow, initiateSignupFlow } from '@/lib/api/oauth'
 
