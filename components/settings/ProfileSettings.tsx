@@ -149,7 +149,7 @@ export default function ProfileSettings() {
             <div className={`p-2 rounded-lg transition-colors duration-200 ${
               shareDefaults.autoPassword ? 'bg-brand-orange text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
             }`}>
-              <LockClosedIcon className="w-5 h-5" />
+              <LockIcon className="w-5 h-5" />
             </div>
             <div className="space-y-0.5">
               <span className={`block text-sm font-medium transition-colors duration-200 ${

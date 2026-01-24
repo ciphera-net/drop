@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeftIcon, CubeIcon } from '@radix-ui/react-icons'
+import { ArrowLeftIcon, BoxIcon } from '@ciphera-net/ui'
 import Link from 'next/link'
 import { createOrganization } from '@/lib/api/organization'
 
@@ -65,7 +65,7 @@ export default function NewOrganizationPage() {
         >
           <div className="flex items-center gap-3 mb-6">
             <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400">
-              <CubeIcon className="h-6 w-6" />
+              <BoxIcon className="h-6 w-6" />
             </div>
             <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">
               Create Organization Workspace

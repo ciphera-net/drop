@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckIcon, PlusIcon, Cross2Icon, ArrowRightIcon } from '@radix-ui/react-icons'
+import { CheckIcon, PlusIcon, XIcon, ArrowRightIcon } from '@ciphera-net/ui'
 import { getUserOrganizations, sendInvitation, OrganizationMember } from '@/lib/api/organization'
 import { toast } from 'sonner'
 import { Button, Input } from '@ciphera-net/ui'
@@ -177,7 +177,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ slug: str
                       onClick={() => handleRemoveEmail(index)}
                       className="p-2 text-neutral-400 hover:text-red-500 transition-colors"
                     >
-                      <Cross2Icon className="h-5 w-5" />
+                      <XIcon className="h-5 w-5" />
                     </button>
                   )}
                 </div>

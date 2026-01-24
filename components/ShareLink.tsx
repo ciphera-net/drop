@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
-import { GridIcon, Share2Icon } from '@radix-ui/react-icons'
+import { GridIcon, Share2Icon } from '@ciphera-net/ui'
 import { QRCodeCanvas } from 'qrcode.react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useKeyboardShortcuts } from '@ciphera-net/ui'
