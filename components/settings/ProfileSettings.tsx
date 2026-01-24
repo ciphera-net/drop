@@ -7,7 +7,7 @@ import api from '@/lib/api/client'
 import { deriveAuthKey } from '@/lib/crypto/password'
 import { deleteAccount, deleteAllUserFiles, getUserSessions, revokeSession, updateUserPreferences } from '@/lib/api/user'
 import { setup2FA, verify2FA, disable2FA, regenerateRecoveryCodes } from '@/lib/api/2fa'
-import { LockClosedIcon } from '@radix-ui/react-icons'
+import { LockIcon } from '@ciphera-net/ui'
 
 interface ShareDefaults {
   expiration: string
