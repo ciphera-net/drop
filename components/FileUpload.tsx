@@ -13,11 +13,10 @@ import type { UploadRequest } from '../lib/types/api'
 import { MAX_FILE_SIZE } from '../lib/constants'
 import { useAuth } from '../lib/auth/context'
 import { formatBytes } from '../lib/utils/format'
-import { useKeyboardShortcuts } from '../lib/hooks/useKeyboardShortcuts'
+import { useKeyboardShortcuts } from '@ciphera-net/ui'
 
-import { Button, Input } from '@ciphera-net/ui'
+import { Button, Input, Captcha } from '@ciphera-net/ui'
 import { PasswordInput } from '@ciphera-net/ui'
-import Captcha from './Captcha'
 
 interface FileUploadProps {
   onUploadComplete?: (shareUrl: string) => void

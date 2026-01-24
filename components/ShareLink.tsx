@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { GridIcon, Share2Icon } from '@radix-ui/react-icons'
 import { QRCodeCanvas } from 'qrcode.react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useKeyboardShortcuts } from '../lib/hooks/useKeyboardShortcuts'
+import { useKeyboardShortcuts } from '@ciphera-net/ui'
 
 interface ShareLinkProps {
   shareUrl: string
