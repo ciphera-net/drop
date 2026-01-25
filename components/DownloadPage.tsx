@@ -6,6 +6,7 @@ import { downloadFile } from '../lib/api/download'
 import { getFileMetadata } from '../lib/api/metadata'
 import { decryptFile, decryptString, base64ToArrayBuffer } from '../lib/crypto/encryption'
 import { decodeKeyFromSharing, importEncryptionKey } from '../lib/crypto/key-management'
+import { FileMetadata } from '../lib/types/api'
 
 import { Button, Input } from '@ciphera-net/ui'
 import { PasswordInput } from '@ciphera-net/ui'
@@ -13,39 +14,74 @@ import { PasswordInput } from '@ciphera-net/ui'
 interface DownloadPageProps {
   shareId: string
   encryptionKey?: string // From URL hash
+  initialMetadata?: FileMetadata
 }
 
-export default function DownloadPage({ shareId, encryptionKey }: DownloadPageProps) {
+export default function DownloadPage({ shareId, encryptionKey, initialMetadata }: DownloadPageProps) {
   const [password, setPassword] = useState('')
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filename, setFilename] = useState<string | null>(null)
   const [isBurned, setIsBurned] = useState(false)
-  const [isPasswordProtected, setIsPasswordProtected] = useState(false)
-  const [metadataLoaded, setMetadataLoaded] = useState(false)
+  const [isPasswordProtected, setIsPasswordProtected] = useState(initialMetadata?.passwordProtected || false)
+  const [metadataLoaded, setMetadataLoaded] = useState(!!initialMetadata)
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [decrypting, setDecrypting] = useState(false)
 
   useEffect(() => {
-    // * Fetch metadata on mount
-    const fetchMetadata = async () => {
-      try {
-        const metadata = await getFileMetadata(shareId)
-        setIsPasswordProtected(metadata.passwordProtected)
-        if (metadata.oneTimeDownload && metadata.downloadLimit && metadata.downloadCount >= metadata.downloadLimit) {
-            // Check if it's already burned (though API usually returns Gone or Forbidden)
-             setIsBurned(true)
+    // * Extract encryption key from URL hash
+    // (Keep this logic, it's specific to the client)
+    if (typeof window !== 'undefined' && window.location.hash) {
+      // Logic to handle hash if needed, currently passed as prop or handled here?
+      // The original code handled it here if not passed as prop.
+      // But wait, the parent server component doesn't pass encryptionKey anymore because it can't read the hash.
+      // So we rely on this useEffect to set it if not passed?
+      // Actually, the previous implementation of page.tsx was client side and read the hash.
+      // Now page.tsx is server side and CANNOT read the hash.
+      // So encryptionKey prop will likely be undefined from the server component.
+      // We need to make sure we still read the hash here.
+    }
+    
+    // * Fetch metadata ONLY if not provided by server
+    if (!initialMetadata) {
+      const fetchMetadata = async () => {
+        try {
+          const metadata = await getFileMetadata(shareId)
+          setIsPasswordProtected(metadata.passwordProtected)
+          if (metadata.oneTimeDownload && metadata.downloadLimit && metadata.downloadCount >= metadata.downloadLimit) {
+              // Check if it's already burned (though API usually returns Gone or Forbidden)
+               setIsBurned(true)
+          }
+        } catch (err) {
+          // Don't block loading on metadata failure, but it might indicate file not found
+          console.error('Failed to load metadata:', err)
+          setError(err instanceof Error ? err.message : 'Failed to load file info')
+        } finally {
+          setMetadataLoaded(true)
         }
-      } catch (err) {
-        // Don't block loading on metadata failure, but it might indicate file not found
-        console.error('Failed to load metadata:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load file info')
-      } finally {
-        setMetadataLoaded(true)
+      }
+      fetchMetadata()
+    } else {
+      // If we have initialMetadata, we still might need to check "burned" status logic
+      if (initialMetadata.oneTimeDownload && initialMetadata.downloadLimit && initialMetadata.downloadCount >= initialMetadata.downloadLimit) {
+         setIsBurned(true)
       }
     }
-    fetchMetadata()
-  }, [shareId])
+  }, [shareId, initialMetadata])
+
+  // We need a separate effect to read the hash for the key, since the server component can't see it.
+  // The original component had this logic mixed in.
+  // We'll add a state for the key if it's not passed in.
+  const [localEncryptionKey, setLocalEncryptionKey] = useState<string | undefined>(encryptionKey)
+
+  useEffect(() => {
+     if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.substring(1) // Remove #
+      if (hash) {
+        setLocalEncryptionKey(hash)
+      }
+    }
+  }, [])
 
   const handleDownload = async (keyFromHash?: string) => {
     // * Pre-check password requirement
@@ -54,7 +90,7 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
       return
     }
 
-    const key = keyFromHash || encryptionKey
+    const key = keyFromHash || localEncryptionKey
     if (!key) {
       setError('Encryption key is required')
       return
@@ -183,7 +219,7 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
           </div>
         )}
 
-        {!encryptionKey && (
+        {!localEncryptionKey && (
           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/50 rounded-xl flex gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0">
                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.008v.008H12v-.008Z" />
@@ -212,7 +248,7 @@ export default function DownloadPage({ shareId, encryptionKey }: DownloadPagePro
 
           <button
             onClick={() => handleDownload()}
-            disabled={downloading || !encryptionKey || isBurned}
+            disabled={downloading || !localEncryptionKey || isBurned}
             className="w-full btn-primary py-3 text-lg shadow-lg shadow-brand-orange/20 hover:shadow-xl hover:shadow-brand-orange/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative overflow-hidden"
           >
             {downloading ? (
