@@ -41,10 +41,15 @@ export async function uploadFile(
   if (request.captcha_solution) formData.append('captcha_solution', request.captcha_solution)
   if (request.captcha_token) formData.append('captcha_token', request.captcha_token)
 
+  const authHeaders = typeof window !== 'undefined' && localStorage.getItem('token') 
+    ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    : {}
+
   try {
     const response = await axios.post(`${API_URL}/api/v1/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        ...authHeaders,
       },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
@@ -91,10 +96,15 @@ export async function uploadToRequest(
   if (request.captcha_solution) formData.append('captcha_solution', request.captcha_solution)
   if (request.captcha_token) formData.append('captcha_token', request.captcha_token)
 
+  const authHeaders = typeof window !== 'undefined' && localStorage.getItem('token') 
+    ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    : {}
+
   try {
     const response = await axios.post(`${API_URL}/api/v1/requests/${requestId}/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        ...authHeaders,
       },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
@@ -137,9 +147,16 @@ async function initMultipartUpload(
   if (request.captcha_solution) formData.append('captcha_solution', request.captcha_solution)
   if (request.captcha_token) formData.append('captcha_token', request.captcha_token)
 
+  const authHeaders = typeof window !== 'undefined' && localStorage.getItem('token') 
+    ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    : {}
+
   try {
     const response = await axios.post(`${API_URL}/api/v1/upload/init`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 
+        'Content-Type': 'multipart/form-data',
+        ...authHeaders,
+      }
     })
     return response.data
   } catch (error: any) {
