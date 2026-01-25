@@ -50,7 +50,7 @@ export async function initiateOAuthFlow(redirectPath = '/auth/callback') {
   localStorage.setItem('oauth_state', state)
   localStorage.setItem('oauth_code_verifier', codeVerifier)
 
-  const redirectUri = encodeURIComponent(`${APP_URL}${redirectPath}`)
+  const redirectUri = encodeURIComponent(`${window.location.origin}${redirectPath}`)
   
   const loginUrl = `${AUTH_URL}/login?client_id=drop-app&redirect_uri=${redirectUri}&response_type=code&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`
 
@@ -66,7 +66,7 @@ export async function initiateSignupFlow(redirectPath = '/auth/callback') {
     localStorage.setItem('oauth_state', state)
     localStorage.setItem('oauth_code_verifier', codeVerifier)
   
-    const redirectUri = encodeURIComponent(`${APP_URL}${redirectPath}`)
+    const redirectUri = encodeURIComponent(`${window.location.origin}${redirectPath}`)
     
     const signupUrl = `${AUTH_URL}/signup?client_id=drop-app&redirect_uri=${redirectUri}&response_type=code&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`
   
