@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTheme } from 'next-themes'
+import { useTheme } from '@ciphera-net/ui'
 import { toast } from '@ciphera-net/ui'
 import { GridIcon, Share2Icon } from '@ciphera-net/ui'
 import { QRCodeCanvas } from 'qrcode.react'
