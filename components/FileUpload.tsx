@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import JSZip from 'jszip'
-import { toast } from 'sonner'
+import { toast } from '@ciphera-net/ui'
 // @ts-ignore
 import exifr from 'exifr'
 import { encryptFile, encryptString, arrayBufferToBase64 } from '../lib/crypto/encryption'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@ciphera-net/ui'
 import apiRequest from '../lib/api/client'
 import { CreateRequestResponse, CreateRequestParams } from '../lib/types/api'
 import { generateEncryptionKey, encodeKeyForSharing, generateIV } from '../lib/crypto/key-management'

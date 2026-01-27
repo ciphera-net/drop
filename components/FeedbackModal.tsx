@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@ciphera-net/ui'
 import { Modal, Button } from '@ciphera-net/ui'
 import Captcha from './Captcha'
 import { useKeyboardShortcuts } from '../lib/hooks/useKeyboardShortcuts'

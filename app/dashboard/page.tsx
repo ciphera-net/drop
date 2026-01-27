@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import { toast } from '@ciphera-net/ui'
 import apiRequest from '@/lib/api/client'
 import { FileShare } from '@/lib/types/api'
 import Link from 'next/link'

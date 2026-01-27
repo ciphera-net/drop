@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckIcon, PlusIcon, XIcon, ArrowRightIcon } from '@ciphera-net/ui'
 import { getUserOrganizations, sendInvitation, OrganizationMember } from '@/lib/api/organization'
-import { toast } from 'sonner'
+import { toast } from '@ciphera-net/ui'
 import { Button, Input } from '@ciphera-net/ui'
 import React from 'react'
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { toast } from 'sonner'
+import { toast } from '@ciphera-net/ui'
 import { Button } from '@ciphera-net/ui'
 import { authFetch, AUTH_URL } from '@/lib/api/client'
 import { initiateOAuthFlow } from '@/lib/api/oauth'
