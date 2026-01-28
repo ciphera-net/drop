@@ -5,6 +5,19 @@ import { useRouter } from 'next/navigation'
 import apiRequest from '@/lib/api/client'
 import { LoadingOverlay } from '@ciphera-net/ui'
 
+/** Decodes the current token and returns org_id and role so UI stays in sync with token context (e.g. after workspace switch). */
+function getContextFromToken(token: string | null): { org_id?: string; role?: string } {
+  if (!token || typeof window === 'undefined') return {}
+  try {
+    const payloadPart = token.split('.')[1]
+    if (!payloadPart) return {}
+    const payload = JSON.parse(atob(payloadPart)) as { org_id?: string; role?: string }
+    return { org_id: payload.org_id, role: payload.role }
+  } catch {
+    return {}
+  }
+}
+
 interface UserPreferences {
   email_notifications: {
     new_file_received: boolean
@@ -67,15 +80,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, 500)
   }, [])
 
-  // Reload user data from API
+  // Reload user data from API; merge org_id/role from current token so dropdown matches token context (e.g. after workspace switch).
   const refresh = useCallback(async () => {
     try {
       const userData = await apiRequest<User>('/auth/user/me')
-      setUser(userData)
-      localStorage.setItem('user', JSON.stringify(userData))
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      const context = getContextFromToken(token)
+      const merged = { ...userData, ...context }
+      setUser(merged)
+      localStorage.setItem('user', JSON.stringify(merged))
     } catch (e) {
       console.error('Failed to refresh user data', e)
-      // Fallback to local storage if network fails? Or maybe just keep current state
       const savedUser = localStorage.getItem('user')
       if (savedUser && !user) {
          try { setUser(JSON.parse(savedUser)) } catch {}
@@ -99,20 +114,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const savedUser = localStorage.getItem('user')
         
         if (token) {
-            // Optimistically set from local storage first
+            const context = getContextFromToken(token)
+            // Optimistically set from local storage first; merge token context so dropdown matches token
             if (savedUser) {
                 try {
-                    setUser(JSON.parse(savedUser))
+                    const parsed = JSON.parse(savedUser) as User
+                    setUser({ ...parsed, ...context })
                 } catch (e) {
                     localStorage.removeItem('user')
                 }
             }
-            
-            // Then fetch fresh data
+
+            // Then fetch fresh data; merge org_id/role from token so dropdown matches token context
             try {
                 const userData = await apiRequest<User>('/auth/user/me')
-                setUser(userData)
-                localStorage.setItem('user', JSON.stringify(userData))
+                const context = getContextFromToken(token)
+                const merged = { ...userData, ...context }
+                setUser(merged)
+                localStorage.setItem('user', JSON.stringify(merged))
             } catch (e) {
                 // If fetch fails (e.g. 401), apiRequest might redirect or throw
                 console.error('Failed to fetch initial user data', e)
