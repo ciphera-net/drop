@@ -40,6 +40,7 @@ export default function Header() {
       onSwitchWorkspace={handleSwitchWorkspace}
       onCreateOrganization={() => window.location.href = '/dashboard/organizations/new'}
       allowPersonalWorkspace={true}
+      dashboardHref="/dashboard"
     />
   )
 }
