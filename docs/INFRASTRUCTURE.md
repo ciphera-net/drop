@@ -10,16 +10,16 @@ Ciphera follows a microservices architecture with a strict separation between Au
 
 | Service | Technology | Hosting | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Ciphera Auth** | Go (Gin) | Railway | Identity Provider, OAuth2, JWT Issuance |
-| **Auth Frontend** | Next.js (React) | Railway | Authentication UI, Login/Signup flows |
-| **Drop Backend** | Go (Gin) | Railway | File Metadata, Upload/Download orchestration |
-| **Drop Frontend** | Next.js (React) | Railway | User Interface, Client-side Encryption |
-| **Pulse Backend** | Go (Gin) | Railway | Pulse event ingestion and queries |
-| **Pulse Frontend** | Next.js (React) | Railway | Pulse dashboard interface |
-| **Ciphera Captcha** | Go (Gin) | Railway | Bot Protection, PoW/Visual Captcha Verification |
-| **Website** | Next.js (React) | Railway | Marketing website |
-| **Ciphera Relay** | Stalwart Mail | Infomaniak Public Cloud | Transactional Email Delivery (SMTP) |
-| **Database** | PostgreSQL | Railway | Relational Data (Users, Metadata) |
+| **Ciphera Auth** | Go (Gin) | Swiss infrastructure | Identity Provider, OAuth2, JWT Issuance |
+| **Auth Frontend** | Next.js (React) | Swiss infrastructure | Authentication UI, Login/Signup flows |
+| **Drop Backend** | Go (Gin) | Swiss infrastructure | File Metadata, Upload/Download orchestration |
+| **Drop Frontend** | Next.js (React) | Swiss infrastructure | User Interface, Client-side Encryption |
+| **Pulse Backend** | Go (Gin) | Swiss infrastructure | Pulse event ingestion and queries |
+| **Pulse Frontend** | Next.js (React) | Swiss infrastructure | Pulse dashboard interface |
+| **Ciphera Captcha** | Go (Gin) | Swiss infrastructure | Bot Protection, PoW/Visual Captcha Verification |
+| **Website** | Next.js (React) | Swiss infrastructure | Marketing website |
+| **Ciphera Relay** | Stalwart Mail | Swiss infrastructure | Transactional Email Delivery (SMTP) |
+| **Database** | PostgreSQL | Swiss infrastructure | Relational Data (Users, Metadata) |
 | **Storage** | Cloudflare R2 | Cloudflare | Encrypted File Blobs (S3 Compatible) |
 
 ## Deployment Strategy
@@ -27,7 +27,7 @@ Ciphera follows a microservices architecture with a strict separation between Au
 ### Authentication Service (`ciphera-auth`)
 - **Repo**: `ciphera-drop/ciphera-auth`
 - **Env Vars**:
-  - `DATABASE_URL`: Connection to Railway Postgres.
+  - `DATABASE_URL`: Connection to Postgres (Swiss infrastructure).
   - `JWT_SECRET`: Signing key for tokens (shared with Backend).
   - `SMTP_HOST`: `relay.ciphera.net`
   - `SMTP_USER`: `noreply@ciphera.net`
@@ -47,7 +47,7 @@ Ciphera follows a microservices architecture with a strict separation between Au
 ### Mail Server (`ciphera-relay`)
 - **Repo**: `ciphera-relay` (Separate Repo)
 - **Software**: Stalwart Mail Server (Docker).
-- **Location**: Infomaniak (Switzerland).
+- **Location**: Switzerland.
 - **IP Address**: Static IPv4.
 - **Ports**: 
   - `25` (SMTP Inbound/Outbound)
@@ -86,7 +86,7 @@ Ciphera follows a microservices architecture with a strict separation between Au
 ### Pulse Backend (`pulse-backend`)
 - **Repo**: `ciphera-drop/pulse-backend`
 - **Env Vars**:
-  - `DATABASE_URL`: Connection to Railway Postgres
+  - `DATABASE_URL`: Connection to Postgres (Swiss infrastructure)
   - `JWT_SECRET`: Shared secret with ciphera-auth
   - `CORS_ORIGIN`: Allowed CORS origins (comma-separated)
   - `PORT`: Server port (default: 8082)
@@ -107,14 +107,14 @@ Ciphera follows a microservices architecture with a strict separation between Au
 ## Monitoring & Maintenance
 
 ### Logs
-- **Apps**: Railway Dashboard Logs.
+- **Apps**: Deployment platform logs (Swiss infrastructure).
 - **Mail**: `ssh root@relay.ciphera.net "docker logs -f ciphera-mail"`
 
 ### Database Backups
-- Handled automatically by Railway.
+- Handled automatically by the deployment platform (Swiss infrastructure).
 
 ### Mail Server Updates
-1. SSH into VPS.
+1. SSH into the mail server host.
 2. `cd ciphera-relay`
 3. `docker compose pull`
 4. `docker compose up -d`

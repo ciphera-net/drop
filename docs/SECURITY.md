@@ -56,10 +56,10 @@ This ensures that even if the TLS connection is stripped or the Auth Server logs
 
 ### Infrastructure
 
-- **Frontend**: Hosted on Railway
-- **Backend API**: Hosted on Railway (encapsulated container environment)
-- **Auth Service**: Hosted on Railway (isolated service)
-- **Database**: Railway PostgreSQL (encrypted at rest)
+- **Frontend**: Hosted on Swiss infrastructure
+- **Backend API**: Hosted on Swiss infrastructure (encapsulated container environment)
+- **Auth Service**: Hosted on Swiss infrastructure (isolated service)
+- **Database**: PostgreSQL on Swiss infrastructure (encrypted at rest)
 - **Storage**: Cloudflare R2 Storage (S3-compatible, encrypted at rest)
 - **DNS & CDN**: Cloudflare (DDoS protection, WAF, SSL termination)
 - **HTTPS**: All communications encrypted in transit (TLS 1.3, Strict SSL)
