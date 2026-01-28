@@ -7,8 +7,8 @@ import { getFileMetadata } from '../lib/api/metadata'
 import { decryptFile, decryptString, base64ToArrayBuffer } from '../lib/crypto/encryption'
 import { decodeKeyFromSharing, importEncryptionKey } from '../lib/crypto/key-management'
 import { FileMetadata } from '../lib/types/api'
-
-import { Button, Input } from '@ciphera-net/ui'
+import { formatBytes } from '../lib/utils/format'
+import { BoxIcon, LockIcon } from '@ciphera-net/ui'
 import { PasswordInput } from '@ciphera-net/ui'
 
 interface DownloadPageProps {
@@ -27,6 +27,7 @@ export default function DownloadPage({ shareId, encryptionKey, initialMetadata }
   const [metadataLoaded, setMetadataLoaded] = useState(!!initialMetadata)
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [decrypting, setDecrypting] = useState(false)
+  const [metadata, setMetadata] = useState<FileMetadata | null>(initialMetadata || null)
 
   useEffect(() => {
     // * Extract encryption key from URL hash
@@ -46,9 +47,10 @@ export default function DownloadPage({ shareId, encryptionKey, initialMetadata }
     if (!initialMetadata) {
       const fetchMetadata = async () => {
         try {
-          const metadata = await getFileMetadata(shareId)
-          setIsPasswordProtected(metadata.passwordProtected)
-          if (metadata.oneTimeDownload && metadata.downloadLimit && metadata.downloadCount >= metadata.downloadLimit) {
+          const fetchedMetadata = await getFileMetadata(shareId)
+          setMetadata(fetchedMetadata)
+          setIsPasswordProtected(fetchedMetadata.passwordProtected)
+          if (fetchedMetadata.oneTimeDownload && fetchedMetadata.downloadLimit && fetchedMetadata.downloadCount >= fetchedMetadata.downloadLimit) {
               // Check if it's already burned (though API usually returns Gone or Forbidden)
                setIsBurned(true)
           }
@@ -62,6 +64,7 @@ export default function DownloadPage({ shareId, encryptionKey, initialMetadata }
       }
       fetchMetadata()
     } else {
+      setMetadata(initialMetadata)
       // If we have initialMetadata, we still might need to check "burned" status logic
       if (initialMetadata.oneTimeDownload && initialMetadata.downloadLimit && initialMetadata.downloadCount >= initialMetadata.downloadLimit) {
          setIsBurned(true)
@@ -157,35 +160,86 @@ export default function DownloadPage({ shareId, encryptionKey, initialMetadata }
     }
   }
 
+  // * Format expiration date
+  const formatExpirationDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = date.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays < 0) return 'Expired'
+    if (diffDays === 0) return 'Expires today'
+    if (diffDays === 1) return 'Expires tomorrow'
+    if (diffDays <= 7) return `Expires in ${diffDays} days`
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
   return (
     <div className="w-full space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-neutral-900 dark:text-white">
           Ready to <span className="text-brand-orange">Download</span>
         </h1>
-        <p className="text-neutral-600 dark:text-neutral-400">
+        <p className="text-neutral-600 dark:text-neutral-400 text-base">
           Secure file transfer powered by Drop
         </p>
       </div>
 
+      {/* * File Info Card */}
       <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-3xl shadow-xl shadow-brand-orange/5 dark:shadow-none border border-neutral-100/50 dark:border-neutral-800 backdrop-blur-sm space-y-6">
-        <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl border border-neutral-100 dark:border-neutral-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand-orange/10 flex items-center justify-center text-brand-orange">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-              </svg>
+        <div className="flex items-center justify-between p-5 bg-gradient-to-br from-neutral-50 to-neutral-100/50 dark:from-neutral-800 dark:to-neutral-800/50 rounded-2xl border border-neutral-200/50 dark:border-neutral-700/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-brand-orange/10 dark:bg-brand-orange/20 flex items-center justify-center text-brand-orange shadow-sm">
+              <BoxIcon className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-neutral-900 dark:text-white">Secure File</p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">{shareId.slice(0, 8)}...</p>
+              <p className="text-sm font-semibold text-neutral-900 dark:text-white">Secure File</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 font-mono mt-0.5">{shareId.slice(0, 12)}...</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-             <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">Encrypted</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 rounded-full border border-green-200/50 dark:border-green-800/50">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span className="text-xs font-medium text-green-700 dark:text-green-400">Encrypted</span>
           </div>
         </div>
+
+        {/* * File Metadata Stats */}
+        {metadata && metadataLoaded && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">File Size</p>
+              <p className="text-lg font-bold text-neutral-900 dark:text-white">{formatBytes(metadata.fileSize)}</p>
+            </div>
+            <div className="rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 p-4">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Downloads</p>
+              <p className="text-lg font-bold text-neutral-900 dark:text-white">
+                {metadata.downloadCount}
+                {metadata.downloadLimit != null ? ` / ${metadata.downloadLimit}` : ''}
+              </p>
+            </div>
+            <div className={`rounded-xl border p-4 ${
+              new Date(metadata.expiresAt) < new Date() 
+                ? 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20'
+                : new Date(metadata.expiresAt).getTime() - new Date().getTime() < 7 * 24 * 60 * 60 * 1000
+                ? 'border-orange-200 bg-orange-50 dark:border-orange-900/50 dark:bg-orange-900/20'
+                : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'
+            }`}>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Expires</p>
+              <p className={`text-lg font-bold ${
+                new Date(metadata.expiresAt) < new Date()
+                  ? 'text-red-700 dark:text-red-400'
+                  : new Date(metadata.expiresAt).getTime() - new Date().getTime() < 7 * 24 * 60 * 60 * 1000
+                  ? 'text-orange-700 dark:text-orange-400'
+                  : 'text-neutral-900 dark:text-white'
+              }`}>
+                {formatExpirationDate(metadata.expiresAt)}
+              </p>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 rounded-xl flex gap-3">
@@ -229,6 +283,28 @@ export default function DownloadPage({ shareId, encryptionKey, initialMetadata }
             </p>
           </div>
         )}
+
+        {/* * Security Features */}
+        <div className="flex flex-wrap items-center gap-4 p-4 bg-neutral-50/50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200/50 dark:border-neutral-700/50">
+          <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+            <LockIcon className="w-4 h-4 text-brand-orange" />
+            <span>End-to-end encrypted</span>
+          </div>
+          {isPasswordProtected && (
+            <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+              <LockIcon className="w-4 h-4 text-brand-orange" />
+              <span>Password protected</span>
+            </div>
+          )}
+          {metadata?.oneTimeDownload && (
+            <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+              <svg className="w-4 h-4 text-brand-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+              </svg>
+              <span>One-time download</span>
+            </div>
+          )}
+        </div>
 
         <div className="space-y-4 pt-2">
           <div>

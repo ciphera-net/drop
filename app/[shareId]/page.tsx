@@ -21,8 +21,13 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
     // If we get here, the file exists. Render the client component.
     // We pass the metadata down so the client doesn't need to fetch it again.
     return (
-      <main className="min-h-screen flex items-center justify-center p-4 py-12 relative overflow-hidden bg-neutral-50/50">
-        <div className="relative z-10 w-full max-w-2xl">
+      <main className="min-h-screen flex items-center justify-center p-4 py-12 relative overflow-hidden bg-ciphera-gradient dark:bg-ciphera-gradient-dark">
+        {/* * Background gradient orbs */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] bg-brand-orange/10 rounded-full blur-[128px] opacity-60" />
+          <div className="absolute bottom-0 right-1/4 w-[250px] h-[250px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] bg-neutral-500/10 dark:bg-neutral-400/10 rounded-full blur-[128px] opacity-40" />
+        </div>
+        <div className="relative z-10 w-full max-w-3xl">
           <DownloadPageComponent 
             shareId={shareId} 
             initialMetadata={metadata} 
