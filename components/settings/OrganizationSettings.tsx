@@ -97,11 +97,11 @@ export default function OrganizationSettings() {
     }
   }, [currentOrgId, loadMembers])
 
-  // If no org ID, we are in personal workspace, so don't show org settings
+  // If no org ID, we are in personal organization context, so don't show org settings
   if (!currentOrgId) {
     return (
         <div className="p-6 text-center text-neutral-500">
-            <p>You are in your Personal Workspace. Switch to an Organization to manage its settings.</p>
+            <p>You are in your personal context. Switch to an Organization to manage its settings.</p>
         </div>
     )
   }
@@ -189,7 +189,7 @@ export default function OrganizationSettings() {
       <div>
         <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Organization Settings</h1>
         <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-          Manage your organization workspace and members.
+          Manage your organization and members.
         </p>
       </div>
 

@@ -118,7 +118,7 @@ function InviteContent() {
           Join {invite.organization_name}
         </h1>
         <p className="text-neutral-600 dark:text-neutral-400 mb-8">
-          You have been invited to join this workspace on Ciphera.
+          You have been invited to join this organization on Ciphera.
         </p>
 
         <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-lg p-4 mb-8 text-left">

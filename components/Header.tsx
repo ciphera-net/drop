@@ -21,7 +21,7 @@ export default function Header() {
     }
   }, [auth.user])
 
-  const handleSwitchWorkspace = async (orgId: string | null) => {
+  const handleSwitchOrganization = async (orgId: string | null) => {
     try {
       const { access_token } = await switchContext(orgId)
       // * API client uses localStorage token; cookies are for server/session consistency
@@ -37,7 +37,7 @@ export default function Header() {
       await auth.refresh()
       router.refresh()
     } catch (err) {
-      console.error('Failed to switch workspace', err)
+      console.error('Failed to switch organization', err)
     }
   }
 
@@ -49,9 +49,9 @@ export default function Header() {
       appName="Drop"
       orgs={orgs}
       activeOrgId={auth.user?.org_id}
-      onSwitchWorkspace={handleSwitchWorkspace}
+      onSwitchOrganization={handleSwitchOrganization}
       onCreateOrganization={() => window.location.href = '/dashboard/organizations/new'}
-      allowPersonalWorkspace={true}
+      allowPersonalOrganization={true}
       dashboardHref="/dashboard"
     />
   )

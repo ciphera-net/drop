@@ -137,7 +137,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ slug: str
                 {org.organization_name} is ready!
               </h2>
               <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-lg mx-auto">
-                Your secure workspace has been created. You can now start sharing files securely and managing your organization's access.
+                Your organization has been created. You can now start sharing files securely and managing your organization's access.
               </p>
               <Button
                 onClick={() => setStep(2)}

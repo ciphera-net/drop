@@ -68,7 +68,7 @@ export default function NewOrganizationPage() {
               <BoxIcon className="h-6 w-6" />
             </div>
             <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">
-              Create Organization Workspace
+              Create Organization
             </h1>
           </div>
 
@@ -81,7 +81,7 @@ export default function NewOrganizationPage() {
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Workspace Name
+                Organization Name
               </label>
               <input
                 type="text"
@@ -96,7 +96,7 @@ export default function NewOrganizationPage() {
 
             <div>
               <label htmlFor="slug" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Workspace URL
+                Organization URL
               </label>
               <div className="flex rounded-lg shadow-sm">
                 <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 sm:text-sm">
@@ -123,7 +123,7 @@ export default function NewOrganizationPage() {
                 disabled={loading}
                 className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {loading ? 'Creating...' : 'Create Workspace'}
+                {loading ? 'Creating...' : 'Create Organization'}
               </button>
             </div>
           </form>
