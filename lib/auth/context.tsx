@@ -66,6 +66,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
     router.refresh()
+    // * Fetch full profile (including display_name) so header shows correct name without page refresh
+    apiRequest<User>('/auth/user/me')
+      .then((fullProfile) => {
+        const context = getContextFromToken(typeof window !== 'undefined' ? localStorage.getItem('token') : null)
+        const merged = { ...fullProfile, ...context }
+        setUser(merged)
+        localStorage.setItem('user', JSON.stringify(merged))
+      })
+      .catch((e) => console.error('Failed to fetch full profile after login', e))
   }
 
   const logout = useCallback(() => {
