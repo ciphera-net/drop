@@ -3,12 +3,12 @@
 import { useEffect, useState, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth/context'
-import { AUTH_URL } from '@/lib/api/client'
+import { AUTH_URL, default as apiRequest } from '@/lib/api/client'
 
 function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, refresh } = useAuth()
+  const { login } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const processedRef = useRef(false)
 
@@ -25,13 +25,16 @@ function AuthCallbackContent() {
         const run = async () => {
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]))
-                login(token, refreshToken, {
-                    id: payload.sub,
-                    email: payload.email || 'user@ciphera.net',
-                    display_name: payload.display_name,
-                    totp_enabled: payload.totp_enabled || false
-                })
-                await refresh()
+                localStorage.setItem('token', token)
+                localStorage.setItem('refreshToken', refreshToken)
+                let userToSet = { id: payload.sub, email: payload.email || 'user@ciphera.net', display_name: payload.display_name, totp_enabled: payload.totp_enabled || false, org_id: payload.org_id, role: payload.role }
+                try {
+                    const fullProfile = await apiRequest<{ id: string; email: string; display_name?: string; totp_enabled: boolean; org_id?: string; role?: string }>('/auth/user/me')
+                    userToSet = { ...fullProfile, org_id: payload.org_id ?? fullProfile.org_id, role: payload.role ?? fullProfile.role }
+                } catch {
+                    // use token user
+                }
+                login(token, refreshToken, userToSet)
                 const returnTo = searchParams.get('returnTo') || '/dashboard'
                 router.push(returnTo)
             } catch (e) {
@@ -88,21 +91,26 @@ function AuthCallbackContent() {
         }
 
         const data = await res.json()
-        
         const payload = JSON.parse(atob(data.access_token.split('.')[1]))
-        
-        login(data.access_token, data.refresh_token, {
+        localStorage.setItem('token', data.access_token)
+        localStorage.setItem('refreshToken', data.refresh_token)
+        let userToSet: { id: string; email: string; display_name?: string; totp_enabled: boolean; org_id?: string; role?: string } = {
             id: payload.sub,
             email: payload.email || 'user@ciphera.net',
             display_name: payload.display_name,
-            totp_enabled: payload.totp_enabled || false
-        })
-        await refresh()
-        
-        // * Cleanup
+            totp_enabled: payload.totp_enabled || false,
+            org_id: payload.org_id,
+            role: payload.role,
+        }
+        try {
+            const fullProfile = await apiRequest<{ id: string; email: string; display_name?: string; totp_enabled: boolean; org_id?: string; role?: string }>('/auth/user/me')
+            userToSet = { ...fullProfile, org_id: payload.org_id ?? fullProfile.org_id, role: payload.role ?? fullProfile.role }
+        } catch {
+            // use token user
+        }
+        login(data.access_token, data.refresh_token, userToSet)
         localStorage.removeItem('oauth_state')
         localStorage.removeItem('oauth_code_verifier')
-        
         router.push('/dashboard')
       } catch (err: any) {
         setError(err.message)
@@ -110,7 +118,7 @@ function AuthCallbackContent() {
     }
 
     exchangeCode()
-  }, [searchParams, login, refresh, router])
+  }, [searchParams, login, router])
 
   if (error) {
     return (
