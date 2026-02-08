@@ -27,9 +27,10 @@ function AuthCallbackContent() {
                 const payload = JSON.parse(atob(token.split('.')[1]))
                 localStorage.setItem('token', token)
                 localStorage.setItem('refreshToken', refreshToken)
-                let userToSet = { id: payload.sub, email: payload.email || 'user@ciphera.net', display_name: payload.display_name, totp_enabled: payload.totp_enabled || false, org_id: payload.org_id, role: payload.role }
+                type UserShape = { id: string; email: string; display_name?: string; totp_enabled: boolean; org_id?: string; role?: string }
+                let userToSet: UserShape = { id: payload.sub, email: payload.email || 'user@ciphera.net', display_name: payload.display_name, totp_enabled: payload.totp_enabled || false, org_id: payload.org_id, role: payload.role }
                 try {
-                    const fullProfile = await apiRequest<{ id: string; email: string; display_name?: string; totp_enabled: boolean; org_id?: string; role?: string }>('/auth/user/me')
+                    const fullProfile = await apiRequest<UserShape>('/auth/user/me')
                     userToSet = { ...fullProfile, org_id: payload.org_id ?? fullProfile.org_id, role: payload.role ?? fullProfile.role }
                 } catch {
                     // use token user
