@@ -8,7 +8,7 @@ import { AUTH_URL } from '@/lib/api/client'
 function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login } = useAuth()
+  const { login, refresh } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const processedRef = useRef(false)
 
@@ -27,8 +27,10 @@ function AuthCallbackContent() {
             login(token, refreshToken, {
                 id: payload.sub,
                 email: payload.email || 'user@ciphera.net',
+                display_name: payload.display_name,
                 totp_enabled: payload.totp_enabled || false
             })
+            await refresh()
             const returnTo = searchParams.get('returnTo') || '/dashboard'
             router.push(returnTo)
         } catch (e) {
@@ -88,9 +90,11 @@ function AuthCallbackContent() {
         
         login(data.access_token, data.refresh_token, {
             id: payload.sub,
-            email: payload.email || 'user@ciphera.net', // Fallback if email claim missing
+            email: payload.email || 'user@ciphera.net',
+            display_name: payload.display_name,
             totp_enabled: payload.totp_enabled || false
         })
+        await refresh()
         
         // * Cleanup
         localStorage.removeItem('oauth_state')
