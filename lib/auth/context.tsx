@@ -29,6 +29,7 @@ interface UserPreferences {
 interface User {
   id: string
   email: string
+  display_name?: string
   totp_enabled: boolean
   org_id?: string
   role?: string
