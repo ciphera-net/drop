@@ -22,20 +22,23 @@ function AuthCallbackContent() {
     
     if (token && refreshToken) {
         processedRef.current = true
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]))
-            login(token, refreshToken, {
-                id: payload.sub,
-                email: payload.email || 'user@ciphera.net',
-                display_name: payload.display_name,
-                totp_enabled: payload.totp_enabled || false
-            })
-            await refresh()
-            const returnTo = searchParams.get('returnTo') || '/dashboard'
-            router.push(returnTo)
-        } catch (e) {
-            setError('Invalid token received')
+        const run = async () => {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]))
+                login(token, refreshToken, {
+                    id: payload.sub,
+                    email: payload.email || 'user@ciphera.net',
+                    display_name: payload.display_name,
+                    totp_enabled: payload.totp_enabled || false
+                })
+                await refresh()
+                const returnTo = searchParams.get('returnTo') || '/dashboard'
+                router.push(returnTo)
+            } catch (e) {
+                setError('Invalid token received')
+            }
         }
+        run()
         return
     }
 
@@ -107,7 +110,7 @@ function AuthCallbackContent() {
     }
 
     exchangeCode()
-  }, [searchParams, login, router])
+  }, [searchParams, login, refresh, router])
 
   if (error) {
     return (
