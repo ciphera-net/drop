@@ -20,8 +20,8 @@ function getExpiringSoonCount(files: FileShare[]): number {
 
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen p-6 pt-24">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen pt-24">
+      <div className="page-container-app">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <div className="h-8 w-48 animate-pulse rounded-lg bg-neutral-200 dark:bg-neutral-800" />
@@ -166,8 +166,8 @@ export default function DashboardPage() {
   const expiringSoon = getExpiringSoonCount(files)
 
   return (
-    <div className="min-h-screen p-6 pt-24">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen pt-24">
+      <div className="page-container-app">
         <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Your Drops</h1>
