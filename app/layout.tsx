@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   manifest: '/manifest.json',
-  themeColor: '#FF4F00',
+  themeColor: '#FD5E0F',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
