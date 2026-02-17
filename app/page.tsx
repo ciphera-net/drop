@@ -6,7 +6,7 @@ import Link from 'next/link'
 import FileUpload from '../components/FileUpload'
 import FileRequest from '../components/FileRequest'
 import ShareLink from '../components/ShareLink'
-import { LoadingOverlay, LockIcon } from '@ciphera-net/ui'
+import { Button, LoadingOverlay, LockIcon } from '@ciphera-net/ui'
 import { useAuth } from '@/lib/auth/context'
 import { initiateOAuthFlow, initiateSignupFlow } from '@/lib/api/oauth'
 
@@ -124,18 +124,20 @@ export default function HomePage() {
                     </p>
                     
                     <div className="w-full max-w-xs space-y-3">
-                      <button 
-                        onClick={() => initiateOAuthFlow()} 
-                        className="btn-primary block w-full text-center"
+                      <Button
+                        onClick={() => initiateOAuthFlow()}
+                        variant="primary"
+                        className="block w-full"
                       >
                         Log In
-                      </button>
-                      <button 
-                        onClick={() => initiateSignupFlow()} 
-                        className="btn-secondary block w-full text-center"
+                      </Button>
+                      <Button
+                        onClick={() => initiateSignupFlow()}
+                        variant="secondary"
+                        className="block w-full"
                       >
                         Create Account
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}

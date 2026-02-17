@@ -49,10 +49,7 @@ function VerifyContent() {
         )}
 
         {status === 'success' && (
-          <Link
-            href="/login"
-            className="inline-block w-full btn-primary"
-          >
+          <Link href="/login" className="btn-primary w-full inline-flex items-center justify-center">
             Go to Login
           </Link>
         )}

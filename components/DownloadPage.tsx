@@ -8,7 +8,7 @@ import { decryptFile, decryptString, base64ToArrayBuffer } from '../lib/crypto/e
 import { decodeKeyFromSharing, importEncryptionKey } from '../lib/crypto/key-management'
 import { FileMetadata } from '../lib/types/api'
 import { formatBytes } from '../lib/utils/format'
-import { BoxIcon, LockIcon } from '@ciphera-net/ui'
+import { BoxIcon, Button, LockIcon } from '@ciphera-net/ui'
 import { PasswordInput } from '@ciphera-net/ui'
 
 interface DownloadPageProps {
@@ -322,10 +322,11 @@ export default function DownloadPage({ shareId, encryptionKey, initialMetadata }
             />
           </div>
 
-          <button
+          <Button
             onClick={() => handleDownload()}
             disabled={downloading || !localEncryptionKey || isBurned}
-            className="w-full btn-primary py-3 text-lg shadow-lg shadow-brand-orange/20 hover:shadow-xl hover:shadow-brand-orange/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative overflow-hidden"
+            variant="primary"
+            className="w-full py-3 text-lg shadow-lg shadow-brand-orange/20 hover:shadow-xl hover:shadow-brand-orange/30 relative overflow-hidden"
           >
             {downloading ? (
               <div className="flex flex-col items-center w-full relative z-10">
@@ -362,7 +363,7 @@ export default function DownloadPage({ shareId, encryptionKey, initialMetadata }
                 Download Securely
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
       

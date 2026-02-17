@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from '@ciphera-net/ui'
+import { Button, toast } from '@ciphera-net/ui'
 import apiRequest from '../lib/api/client'
 import { CreateRequestResponse, CreateRequestParams } from '../lib/types/api'
 import { generateEncryptionKey, encodeKeyForSharing, generateIV } from '../lib/crypto/key-management'
@@ -152,23 +152,15 @@ export default function FileRequest({ onRequestCreated }: FileRequestProps) {
 
       {/* Create Button */}
       <div className="pt-4 mt-auto">
-        <button
+        <Button
           onClick={handleCreateRequest}
           disabled={loading}
-          className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 py-3.5"
+          isLoading={loading}
+          variant="primary"
+          className="w-full py-3.5"
         >
-          {loading ? (
-            <>
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Creating Link...
-            </>
-          ) : (
-            'Create Request Link'
-          )}
-        </button>
+          Create Request Link
+        </Button>
       </div>
 
       {/* Error Message */}

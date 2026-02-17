@@ -847,13 +847,14 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
             </div>
           </div>
         ) : (
-          <button
+          <Button
             onClick={handleUpload}
             disabled={uploading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="primary"
+            className="w-full"
           >
             {requestId ? 'Securely Upload File' : 'Upload & Generate Link'}
-          </button>
+          </Button>
         )
       )}
 

@@ -8,6 +8,7 @@ import { FileRequest } from '../../../lib/types/api'
 import { decodeKeyFromSharing, importEncryptionKey } from '../../../lib/crypto/key-management'
 import { decryptString, base64ToArrayBuffer } from '../../../lib/crypto/encryption'
 import Link from 'next/link'
+import { Button } from '@ciphera-net/ui'
 
 export default function RequestPage() {
   const params = useParams()
@@ -152,12 +153,13 @@ export default function RequestPage() {
               <p className="text-neutral-600">
                 Your file has been securely encrypted and sent.
               </p>
-              <button 
+              <Button
                 onClick={() => setSuccess(false)}
-                className="btn-secondary mt-4 w-full"
+                variant="secondary"
+                className="mt-4 w-full"
               >
                 Send Another File
-              </button>
+              </Button>
             </div>
           ) : (
             <FileUpload 

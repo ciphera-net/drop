@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTheme } from '@ciphera-net/ui'
 import { toast } from '@ciphera-net/ui'
-import { GridIcon, Share2Icon } from '@ciphera-net/ui'
+import { Button, GridIcon, Share2Icon } from '@ciphera-net/ui'
 import { QRCodeCanvas } from 'qrcode.react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useKeyboardShortcuts } from '@ciphera-net/ui'
@@ -96,12 +96,13 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
             >
               <Share2Icon className="w-5 h-5" />
             </button>
-            <button
+            <Button
               onClick={handleCopy}
-              className="flex-1 btn-secondary whitespace-nowrap !px-6 !py-3 h-[46px] flex items-center justify-center"
+              variant="secondary"
+              className="flex-1 whitespace-nowrap !px-6 !py-3 h-[46px]"
             >
               {copied ? 'Copied!' : 'Copy Link'}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -150,12 +151,9 @@ export default function ShareLink({ shareUrl, onReset, title }: ShareLinkProps) 
         </div>
       </div>
 
-      <button
-        onClick={onReset}
-        className="w-full btn-secondary"
-      >
+      <Button onClick={onReset} variant="secondary" className="w-full">
         {title ? 'Create Another Request' : 'Upload Another File'}
-      </button>
+      </Button>
     </div>
   )
 }
