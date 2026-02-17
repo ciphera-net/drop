@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Spinner } from '@ciphera-net/ui'
 import apiRequest from '@/lib/api/client'
 
 function VerifyContent() {
@@ -44,7 +45,7 @@ function VerifyContent() {
 
         {status === 'verifying' && (
           <div className="flex justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-800" />
+            <Spinner size="lg" className="border-neutral-300 border-t-neutral-800" />
           </div>
         )}
 

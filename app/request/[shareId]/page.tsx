@@ -8,7 +8,7 @@ import { FileRequest } from '../../../lib/types/api'
 import { decodeKeyFromSharing, importEncryptionKey } from '../../../lib/crypto/key-management'
 import { decryptString, base64ToArrayBuffer } from '../../../lib/crypto/encryption'
 import Link from 'next/link'
-import { Button } from '@ciphera-net/ui'
+import { Button, Spinner } from '@ciphera-net/ui'
 
 export default function RequestPage() {
   const params = useParams()
@@ -95,7 +95,7 @@ export default function RequestPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-orange border-t-transparent" />
+          <Spinner size="lg" />
           <p className="text-neutral-500">Loading request...</p>
         </div>
       </div>
