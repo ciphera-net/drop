@@ -30,8 +30,9 @@ Ciphera follows a microservices architecture with a strict separation between Au
   - `DATABASE_URL`: Connection to Postgres (Swiss infrastructure).
   - `JWT_SECRET`: Signing key for tokens (shared with Backend).
   - `SMTP_HOST`: `relay.ciphera.net`
-  - `SMTP_USER`: `noreply@ciphera.net`
-  - `SMTP_PASS`: (Secret)
+  - `SMTP_USER`: `authnoreply` (Stalwart account name; NOT the full email)
+  - `SMTP_FROM`: `noreply@auth.ciphera.net`
+  - `SMTP_PASS`: (Secret for authnoreply in Stalwart)
   - `FRONTEND_URL`: `https://drop.ciphera.net`
 
 ### Captcha Service (`ciphera-captcha`)
