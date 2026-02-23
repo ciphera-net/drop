@@ -97,6 +97,11 @@ Ciphera follows a microservices architecture with a strict separation between Au
   - `JWT_SECRET`: Shared secret with ciphera-auth
   - `CORS_ORIGIN`: Allowed CORS origins (comma-separated)
   - `PORT`: Server port (default: 8082)
+  - `SMTP_HOST`: `relay.ciphera.net` (for billing/uptime notification emails)
+  - `SMTP_USER`: `pulsenoreply` (Stalwart account name)
+  - `SMTP_FROM`: `noreply@pulse.ciphera.net`
+  - `SMTP_PASS`: Password for `pulsenoreply` in Stalwart
+  - `PULSE_APP_URL`: `https://pulse.ciphera.net` (for links in emails)
 
 ### Pulse Frontend (`pulse`)
 - **Repo**: `ciphera-drop/pulse`
