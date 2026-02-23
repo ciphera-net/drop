@@ -64,7 +64,8 @@ Ciphera follows a microservices architecture with a strict separation between Au
 ### Application Backend (`drop-backend`)
 - **Repo**: `ciphera-drop/drop-backend`
 - **Env Vars**:
-  - `DATABASE_URL`: Same Postgres instance (different schema or logic separation).
+  - `DATABASE_URL`: Postgres for drop (file_shares, file_requests). Database name typically `drop`.
+  - `AUTH_DATABASE_URL`: Postgres for ciphera-auth (users table). Required for file_downloaded/new_file_received emails. Use same value as ciphera-auth's `DATABASE_URL` (e.g. database `auth` or `ciphera`).
   - `JWT_SECRET`: Verification key for tokens.
   - `R2_ACCESS_KEY`: Cloudflare Storage Key.
   - `R2_SECRET_KEY`: Cloudflare Storage Secret.
