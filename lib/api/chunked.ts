@@ -106,7 +106,7 @@ export async function uploadFileChunked(
     uploadToken: string
     uploadId: string
     shareId: string
-  }>(`${API_URL}/api/v1/upload/init`, initBody)
+  }>(`${API_URL}/api/v1/upload/init`, initBody, { withCredentials: true })
   
   const { uploadToken, uploadId, shareId } = initRes.data
 
@@ -153,6 +153,7 @@ export async function uploadFileChunked(
         formData.append('file', encryptedBlob)
 
         const chunkRes = await axios.post<UploadPartResponse>(`${API_URL}/api/v1/upload/part`, formData, {
+          withCredentials: true,
           onUploadProgress: (e) => {
             if (e.total) {
               const progressRatio = e.loaded / e.total
@@ -187,7 +188,7 @@ export async function uploadFileChunked(
     parts: results
   }
   
-  const completeRes = await axios.post(`${API_URL}/api/v1/upload/complete`, completeBody)
+  const completeRes = await axios.post(`${API_URL}/api/v1/upload/complete`, completeBody, { withCredentials: true })
   const responseData = completeRes.data
   
   // * 6. Generate Response

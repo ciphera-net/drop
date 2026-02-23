@@ -31,6 +31,7 @@ export async function downloadFile(
     oneTimeDownload?: boolean
     chunkSize?: number
   }>(`${API_URL}/api/v1/download`, body, {
+    withCredentials: true,
     onDownloadProgress: (progressEvent) => {
       if (onProgress && progressEvent.total) {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)

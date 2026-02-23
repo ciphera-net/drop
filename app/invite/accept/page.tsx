@@ -6,6 +6,7 @@ import { toast } from '@ciphera-net/ui'
 import { Button } from '@ciphera-net/ui'
 import { authFetch, AUTH_URL } from '@/lib/api/client'
 import { initiateOAuthFlow } from '@/lib/api/oauth'
+import { useAuth } from '@/lib/auth/context'
 import Link from 'next/link'
 
 // We need a specific API call for the public invite info
@@ -27,20 +28,16 @@ async function acceptInvitation(token: string) {
 function InviteContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuth()
   const token = searchParams.get('token')
-  
+  const isAuthenticated = !!user
+
   const [loading, setLoading] = useState(true)
   const [invite, setInvite] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [accepting, setAccepting] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
-    // Check auth
-    if (typeof window !== 'undefined') {
-      setIsAuthenticated(!!localStorage.getItem('token'))
-    }
-
     if (!token) {
       setError('Missing invitation token')
       setLoading(false)

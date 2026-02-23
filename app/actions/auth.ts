@@ -29,7 +29,10 @@ interface UserPayload {
   role?: string
 }
 
-export async function exchangeAuthCode(code: string, codeVerifier: string, redirectUri: string) {
+/** Error type returned to client for mapping to user-facing copy (no sensitive details). */
+export type AuthExchangeErrorType = 'network' | 'expired' | 'invalid' | 'server'
+
+export async function exchangeAuthCode(code: string, codeVerifier: string | null, redirectUri: string) {
   try {
     const res = await fetch(`${AUTH_API_URL}/oauth/token`, {
       method: 'POST',
@@ -39,21 +42,28 @@ export async function exchangeAuthCode(code: string, codeVerifier: string, redir
       body: JSON.stringify({
         grant_type: 'authorization_code',
         code,
-        client_id: 'drop-app', // Changed client_id for Drop
+        client_id: 'drop-app',
         redirect_uri: redirectUri,
-        code_verifier: codeVerifier,
+        code_verifier: codeVerifier || '',
       }),
     })
 
     if (!res.ok) {
-      const data = await res.json()
-      throw new Error(data.error || 'Failed to exchange token')
+      const status = res.status
+      const errorType: AuthExchangeErrorType =
+        status === 401 ? 'expired' : status === 403 ? 'invalid' : 'server'
+      return { success: false as const, error: errorType }
     }
 
     const data: AuthResponse = await res.json()
-    
+    if (!data?.access_token || typeof data.access_token !== 'string') {
+      throw new Error('Invalid token response')
+    }
     // * Decode payload (without verification, we trust the direct channel to Auth Server)
     const payloadPart = data.access_token.split('.')[1]
+    if (!payloadPart) {
+      throw new Error('Invalid token format')
+    }
     const payload: UserPayload = JSON.parse(Buffer.from(payloadPart, 'base64').toString())
 
     // * Set Cookies
@@ -91,26 +101,24 @@ export async function exchangeAuthCode(code: string, codeVerifier: string, redir
       }
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Auth Exchange Error:', error)
-    return { success: false, error: error.message }
+    const isNetwork =
+      error instanceof TypeError ||
+      (error instanceof Error && (error.name === 'AbortError' || /fetch|network|ECONNREFUSED|ETIMEDOUT/i.test(error.message)))
+    return { success: false as const, error: isNetwork ? 'network' : 'server' }
   }
 }
 
 export async function setSessionAction(accessToken: string, refreshToken?: string) {
     try {
-        console.log('[setSessionAction] Decoding token...')
         if (!accessToken) throw new Error('Access token is missing')
         
         const payloadPart = accessToken.split('.')[1]
         const payload: UserPayload = JSON.parse(Buffer.from(payloadPart, 'base64').toString())
-        
-        console.log('[setSessionAction] Token Payload:', { sub: payload.sub, org_id: payload.org_id })
 
         const cookieStore = await cookies()
         const cookieDomain = getCookieDomain()
-        
-        console.log('[setSessionAction] Setting cookies with domain:', cookieDomain)
 
         cookieStore.set('access_token', accessToken, {
             httpOnly: true,
@@ -133,8 +141,6 @@ export async function setSessionAction(accessToken: string, refreshToken?: strin
             })
         }
         
-        console.log('[setSessionAction] Cookies set successfully')
-
         return {
             success: true,
             user: {

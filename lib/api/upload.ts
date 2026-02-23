@@ -41,16 +41,12 @@ export async function uploadFile(
   if (request.captcha_solution) formData.append('captcha_solution', request.captcha_solution)
   if (request.captcha_token) formData.append('captcha_token', request.captcha_token)
 
-  const authHeaders = typeof window !== 'undefined' && localStorage.getItem('token') 
-    ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    : {}
-
   try {
     const response = await axios.post(`${API_URL}/api/v1/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        ...authHeaders,
       },
+      withCredentials: true,
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
           const percentCompleted = (progressEvent.loaded * 100) / progressEvent.total
@@ -96,16 +92,12 @@ export async function uploadToRequest(
   if (request.captcha_solution) formData.append('captcha_solution', request.captcha_solution)
   if (request.captcha_token) formData.append('captcha_token', request.captcha_token)
 
-  const authHeaders = typeof window !== 'undefined' && localStorage.getItem('token') 
-    ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    : {}
-
   try {
     const response = await axios.post(`${API_URL}/api/v1/requests/${requestId}/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        ...authHeaders,
       },
+      withCredentials: true,
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
           const percentCompleted = (progressEvent.loaded * 100) / progressEvent.total
@@ -147,16 +139,12 @@ async function initMultipartUpload(
   if (request.captcha_solution) formData.append('captcha_solution', request.captcha_solution)
   if (request.captcha_token) formData.append('captcha_token', request.captcha_token)
 
-  const authHeaders = typeof window !== 'undefined' && localStorage.getItem('token') 
-    ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    : {}
-
   try {
     const response = await axios.post(`${API_URL}/api/v1/upload/init`, formData, {
-      headers: { 
+      headers: {
         'Content-Type': 'multipart/form-data',
-        ...authHeaders,
-      }
+      },
+      withCredentials: true,
     })
     return response.data
   } catch (error: any) {
@@ -184,6 +172,7 @@ async function uploadPart(
   try {
     const response = await axios.post(`${API_URL}/api/v1/upload/part`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      withCredentials: true,
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
           onProgress(progressEvent.loaded, progressEvent.total)
@@ -208,7 +197,7 @@ async function completeMultipartUpload(
     const response = await axios.post(`${API_URL}/api/v1/upload/complete`, {
       uploadToken,
       parts
-    })
+    }, { withCredentials: true })
     return response.data
   } catch (error: any) {
     const errorMessage = error.response?.data?.details 

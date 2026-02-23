@@ -2,11 +2,15 @@
  * HTTP client wrapper for API calls
  */
 
-// Use AUTH_URL for redirects (Frontend UI)
-// Use AUTH_API_URL for API calls (Backend)
+import { authMessageFromStatus, AUTH_ERROR_MESSAGES } from '@ciphera-net/ui'
+
+/** Request timeout in ms; network errors surface as user-facing "Network error, please try again." */
+const FETCH_TIMEOUT_MS = 30_000
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 export const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:3000'
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001' // Default frontend port
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'
+export const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:8081'
 
 export function getLoginUrl(redirectPath = '/auth/callback') {
   const redirectUri = encodeURIComponent(`${APP_URL}${redirectPath}`)
@@ -18,26 +22,39 @@ export function getSignupUrl(redirectPath = '/auth/callback') {
   return `${AUTH_URL}/signup?client_id=drop-app&redirect_uri=${redirectUri}&response_type=code`
 }
 
-export const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:8081'
-
 export class ApiError extends Error {
   status: number
-  constructor(message: string, status: number) {
+  data?: Record<string, unknown>
+
+  constructor(message: string, status: number, data?: Record<string, unknown>) {
     super(message)
     this.status = status
+    this.data = data
   }
 }
 
 // * Mutex for token refresh
 let isRefreshing = false
-let refreshSubscribers: ((token: string) => void)[] = []
+type RefreshSubscriber = { onSuccess: () => void; onFailure: (err: unknown) => void }
+let refreshSubscribers: RefreshSubscriber[] = []
 
-function subscribeToTokenRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb)
+function subscribeToTokenRefresh(onSuccess: () => void, onFailure: (err: unknown) => void) {
+  refreshSubscribers.push({ onSuccess, onFailure })
 }
 
-function onRefreshed(token: string) {
-  refreshSubscribers.map((cb) => cb(token))
+function onRefreshed() {
+  refreshSubscribers.forEach((s) => s.onSuccess())
+  refreshSubscribers = []
+}
+
+function onRefreshFailed(err: unknown) {
+  refreshSubscribers.forEach((s) => {
+    try {
+      s.onFailure(err)
+    } catch {
+      // ignore
+    }
+  })
   refreshSubscribers = []
 }
 
@@ -52,108 +69,94 @@ async function apiRequest<T>(
   const isAuthRequest = endpoint.startsWith('/auth')
   const baseUrl = isAuthRequest ? AUTH_API_URL : API_URL
   const url = `${baseUrl}/api/v1${endpoint}`
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
   }
 
-  // Inject Auth Token if available (Client-side only)
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token')
-    if (token) {
-      (headers as any)['Authorization'] = `Bearer ${token}`
-    }
-  }
+  // * Rely on HttpOnly cookies; no manual Authorization header.
+  // * credentials: 'include' sends cookies cross-origin (same site in prod: .ciphera.net; localhost in dev).
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  const signal = options.signal ?? controller.signal
+
+  let response: Response
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+      signal,
+    })
+    clearTimeout(timeoutId)
+  } catch (e) {
+    clearTimeout(timeoutId)
+    if (e instanceof Error && (e.name === 'AbortError' || e.name === 'TypeError')) {
+      throw new ApiError(AUTH_ERROR_MESSAGES.NETWORK, 0)
+    }
+    throw e
+  }
 
   if (!response.ok) {
     if (response.status === 401) {
-      // * Attempt Token Refresh if 401
       if (typeof window !== 'undefined') {
-        const refreshToken = localStorage.getItem('refreshToken')
-        
-        // * Prevent infinite loop: Don't refresh if the failed request WAS a refresh request
-        if (refreshToken && !endpoint.includes('/auth/refresh')) {
+        if (!endpoint.includes('/auth/refresh')) {
           if (isRefreshing) {
-            // * If refresh is already in progress, wait for it to complete
-            return new Promise((resolve, reject) => {
-              subscribeToTokenRefresh(async (newToken) => {
-                // Retry original request with new token
-                const newHeaders = {
-                  ...headers,
-                  'Authorization': `Bearer ${newToken}`,
-                }
-                try {
-                  const retryResponse = await fetch(url, {
-                    ...options,
-                    headers: newHeaders,
-                  })
-                  if (retryResponse.ok) {
-                    resolve(retryResponse.json())
-                  } else {
-                    reject(new ApiError('Retry failed', retryResponse.status))
+            return new Promise<T>((resolve, reject) => {
+              subscribeToTokenRefresh(
+                async () => {
+                  try {
+                    const retryResponse = await fetch(url, {
+                      ...options,
+                      headers,
+                      credentials: 'include',
+                    })
+                    if (retryResponse.ok) {
+                      resolve(await retryResponse.json())
+                    } else {
+                      reject(new ApiError(authMessageFromStatus(retryResponse.status), retryResponse.status))
+                    }
+                  } catch (e) {
+                    reject(e)
                   }
-                } catch (e) {
-                  reject(e)
-                }
-              })
+                },
+                (err) => reject(err)
+              )
             })
           }
 
           isRefreshing = true
 
           try {
-            // * Get active org ID to preserve context
-            const activeOrgId = localStorage.getItem('active_org_id')
-            
-            const refreshRes = await fetch(`${AUTH_API_URL}/api/v1/auth/refresh`, {
+            const refreshRes = await fetch('/api/auth/refresh', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                  refresh_token: refreshToken,
-                  organization_id: activeOrgId || undefined
-              }),
+              credentials: 'include',
             })
 
             if (refreshRes.ok) {
-              const data = await refreshRes.json()
-              localStorage.setItem('token', data.access_token)
-              localStorage.setItem('refreshToken', data.refresh_token) // Rotation
-              
-              // Notify waiting requests
-              onRefreshed(data.access_token)
-
-              // * Retry original request with new token
-              const newHeaders = {
-                ...headers,
-                'Authorization': `Bearer ${data.access_token}`,
-              }
+              onRefreshed()
               const retryResponse = await fetch(url, {
                 ...options,
-                headers: newHeaders,
+                headers,
+                credentials: 'include',
               })
-              
               if (retryResponse.ok) {
                 return retryResponse.json()
               }
             } else {
-              // * Refresh failed, logout
-              localStorage.removeItem('token')
-              localStorage.removeItem('refreshToken')
+              const sessionExpiredMsg = authMessageFromStatus(401)
+              onRefreshFailed(new ApiError(sessionExpiredMsg, 401))
               localStorage.removeItem('user')
-              // Don't auto-redirect here, let the caller handle the 401 if they want, 
-              // or we can redirect. But throwing 401 allows component to decide (e.g. save return URL)
-              // window.location.href = '/login' 
-              // actually, throwing ApiError(401) is better than redirecting blindly
             }
           } catch (e) {
-            // * Network error during refresh or logout
-            throw e
+            const err = e instanceof Error && (e.name === 'AbortError' || e.name === 'TypeError')
+              ? new ApiError(AUTH_ERROR_MESSAGES.NETWORK, 0)
+              : e
+            onRefreshFailed(err)
+            throw err
           } finally {
             isRefreshing = false
           }
@@ -161,11 +164,9 @@ async function apiRequest<T>(
       }
     }
 
-    const errorBody = await response.json().catch(() => ({
-      error: 'Unknown error',
-      message: `HTTP ${response.status}: ${response.statusText}`,
-    }))
-    throw new ApiError(errorBody.message || errorBody.error || 'Request failed', response.status)
+    const errorBody = await response.json().catch(() => ({}))
+    const message = authMessageFromStatus(response.status)
+    throw new ApiError(message, response.status, errorBody)
   }
 
   return response.json()

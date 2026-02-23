@@ -4,19 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter } from 'next/navigation'
 import apiRequest from '@/lib/api/client'
 import { LoadingOverlay } from '@ciphera-net/ui'
-
-/** Decodes the current token and returns org_id and role so UI stays in sync with token context (e.g. after workspace switch). */
-function getContextFromToken(token: string | null): { org_id?: string; role?: string } {
-  if (!token || typeof window === 'undefined') return {}
-  try {
-    const payloadPart = token.split('.')[1]
-    if (!payloadPart) return {}
-    const payload = JSON.parse(atob(payloadPart)) as { org_id?: string; role?: string }
-    return { org_id: payload.org_id, role: payload.role }
-  } catch {
-    return {}
-  }
-}
+import { logoutAction, getSessionAction } from '@/app/actions/auth'
 
 interface UserPreferences {
   email_notifications: {
@@ -39,7 +27,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (token: string, refreshToken: string, user: User) => void
+  login: (user: User) => void
   logout: () => void
   refresh: () => Promise<void>
   refreshSession: () => Promise<void>
@@ -60,94 +48,104 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const router = useRouter()
 
-  const login = (token: string, refreshToken: string, userData: User) => {
-    localStorage.setItem('token', token)
-    localStorage.setItem('refreshToken', refreshToken)
+  const login = (userData: User) => {
+    // * We store user profile in localStorage for optimistic UI, but NOT the token
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
     router.refresh()
     // * Fetch full profile (including display_name) so header shows correct name without page refresh
     apiRequest<User>('/auth/user/me')
       .then((fullProfile) => {
-        const context = getContextFromToken(typeof window !== 'undefined' ? localStorage.getItem('token') : null)
-        const merged = { ...fullProfile, ...context }
-        setUser(merged)
-        localStorage.setItem('user', JSON.stringify(merged))
+        setUser((prev) => {
+          const merged = {
+            ...fullProfile,
+            org_id: prev?.org_id ?? fullProfile.org_id,
+            role: prev?.role ?? fullProfile.role,
+          }
+          localStorage.setItem('user', JSON.stringify(merged))
+          return merged
+        })
       })
       .catch((e) => console.error('Failed to fetch full profile after login', e))
   }
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     setIsLoggingOut(true)
+    await logoutAction()
+    localStorage.removeItem('user')
+    // * Clear legacy tokens if they exist (migration)
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
-    localStorage.removeItem('user')
-    // * Don't set user to null here to prevent protected routes from redirecting to /login before we navigate away
-    // setUser(null)
-    
     setTimeout(() => {
       window.location.href = '/'
     }, 500)
   }, [])
 
-  // Reload user data from API; merge org_id/role from current token so dropdown matches token context (e.g. after workspace switch).
   const refresh = useCallback(async () => {
     try {
       const userData = await apiRequest<User>('/auth/user/me')
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-      const context = getContextFromToken(token)
-      const merged = { ...userData, ...context }
-      setUser(merged)
-      localStorage.setItem('user', JSON.stringify(merged))
+      setUser((prev) => {
+        const merged = {
+          ...userData,
+          org_id: prev?.org_id,
+          role: prev?.role,
+        }
+        localStorage.setItem('user', JSON.stringify(merged))
+        return merged
+      })
     } catch (e) {
       console.error('Failed to refresh user data', e)
-      const savedUser = localStorage.getItem('user')
-      if (savedUser && !user) {
-         try { setUser(JSON.parse(savedUser)) } catch {}
-      }
     }
     router.refresh()
-  }, [router, user])
+  }, [router])
 
-  // New method for session refresh (token refresh is handled by client, this just reloads user/UI state)
   const refreshSession = useCallback(async () => {
-      // For now, this is alias to refresh + hard reload if needed, 
-      // but WorkspaceSwitcher calls window.location.reload() anyway so this might be redundant.
-      // However, to satisfy the interface:
-      await refresh()
+    await refresh()
   }, [refresh])
 
   // Initial load
   useEffect(() => {
     const init = async () => {
-        const token = localStorage.getItem('token')
-        const savedUser = localStorage.getItem('user')
-        
-        if (token) {
-            const context = getContextFromToken(token)
-            // Optimistically set from local storage first; merge token context so dropdown matches token
-            if (savedUser) {
-                try {
-                    const parsed = JSON.parse(savedUser) as User
-                    setUser({ ...parsed, ...context })
-                } catch (e) {
-                    localStorage.removeItem('user')
-                }
-            }
+      // * 1. Check server-side session (cookies)
+      let session = await getSessionAction()
 
-            // Then fetch fresh data; merge org_id/role from token so dropdown matches token context
-            try {
-                const userData = await apiRequest<User>('/auth/user/me')
-                const context = getContextFromToken(token)
-                const merged = { ...userData, ...context }
-                setUser(merged)
-                localStorage.setItem('user', JSON.stringify(merged))
-            } catch (e) {
-                // If fetch fails (e.g. 401), apiRequest might redirect or throw
-                console.error('Failed to fetch initial user data', e)
-            }
+      // * 2. If no access_token but refresh_token may exist, try refresh (fixes 15-min inactivity logout)
+      if (!session && typeof window !== 'undefined') {
+        const refreshRes = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        })
+        if (refreshRes.ok) {
+          session = await getSessionAction()
         }
-        setLoading(false)
+      }
+
+      if (session) {
+        setUser(session)
+        localStorage.setItem('user', JSON.stringify(session))
+        // * Fetch full profile (including display_name) from API; preserve org_id/role from session
+        try {
+          const userData = await apiRequest<User>('/auth/user/me')
+          const merged = { ...userData, org_id: session.org_id, role: session.role }
+          setUser(merged)
+          localStorage.setItem('user', JSON.stringify(merged))
+        } catch (e) {
+          console.error('Failed to fetch full profile', e)
+        }
+      } else {
+        // * Session invalid/expired
+        localStorage.removeItem('user')
+        setUser(null)
+      }
+
+      // * Clear legacy tokens if they exist (migration)
+      if (typeof window !== 'undefined' && localStorage.getItem('token')) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+      }
+
+      setLoading(false)
     }
     init()
   }, [])
