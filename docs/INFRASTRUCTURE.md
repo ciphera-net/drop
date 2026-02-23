@@ -68,6 +68,11 @@ Ciphera follows a microservices architecture with a strict separation between Au
   - `JWT_SECRET`: Verification key for tokens.
   - `R2_ACCESS_KEY`: Cloudflare Storage Key.
   - `R2_SECRET_KEY`: Cloudflare Storage Secret.
+  - `SMTP_HOST`: `relay.ciphera.net` (for file downloaded / new file received notifications)
+  - `SMTP_USER`: `dropnoreply` (Stalwart account name)
+  - `SMTP_FROM`: `noreply@drop.ciphera.net`
+  - `SMTP_PASS`: Password for `dropnoreply` in Stalwart
+  - `DROP_APP_URL`: `https://drop.ciphera.net` (for links in notification emails)
 
 ### Application Frontend (`drop-frontend`)
 - **Repo**: `ciphera-drop/drop-frontend`
