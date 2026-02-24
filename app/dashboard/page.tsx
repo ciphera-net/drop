@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { toast } from '@ciphera-net/ui'
+import { toast, Modal } from '@ciphera-net/ui'
 import apiRequest from '@/lib/api/client'
 import { FileShare } from '@/lib/types/api'
 import Link from 'next/link'
@@ -82,10 +82,10 @@ function DashboardSkeleton() {
 
 function DropCard({
   file,
-  onDelete,
+  onDeleteClick,
 }: {
   file: FileShare
-  onDelete: (shareId: string) => void
+  onDeleteClick: (shareId: string) => void
 }) {
   return (
     <div className="group relative flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900">
@@ -104,7 +104,7 @@ function DropCard({
         </div>
         <button
           type="button"
-          onClick={() => onDelete(file.share_id)}
+          onClick={() => onDeleteClick(file.share_id)}
           className="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900"
           title="Delete"
           aria-label="Delete"
@@ -139,6 +139,9 @@ export default function DashboardPage() {
   const [files, setFiles] = useState<FileShare[]>([])
   const [loadingFiles, setLoadingFiles] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [shareIdToDelete, setShareIdToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
 
@@ -165,18 +168,30 @@ export default function DashboardPage() {
     fetchFiles()
   }, [user, authLoading, router])
 
-  const handleDelete = async (shareId: string) => {
-    if (!confirm('Are you sure you want to delete this file? This action cannot be undone.')) {
-      return
-    }
+  const openDeleteModal = (shareId: string) => {
+    setShareIdToDelete(shareId)
+    setShowDeleteModal(true)
+  }
 
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false)
+    setShareIdToDelete(null)
+  }
+
+  const handleDelete = async () => {
+    if (!shareIdToDelete) return
+
+    setIsDeleting(true)
     try {
-      await apiRequest(`/files/${shareId}`, { method: 'DELETE' })
-      setFiles((prev) => prev.filter((f) => f.share_id !== shareId))
+      await apiRequest(`/files/${shareIdToDelete}`, { method: 'DELETE' })
+      setFiles((prev) => prev.filter((f) => f.share_id !== shareIdToDelete))
       toast.success('File deleted successfully')
+      closeDeleteModal()
     } catch (err) {
       console.error('Failed to delete file:', err)
       toast.error('Failed to delete file')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -272,10 +287,40 @@ export default function DashboardPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {files.map((file) => (
-            <DropCard key={file.id} file={file} onDelete={handleDelete} />
+            <DropCard key={file.id} file={file} onDeleteClick={openDeleteModal} />
           ))}
         </div>
       )}
+
+      {/* Delete confirmation modal (Pulse-style) */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={closeDeleteModal}
+        title={<span className="text-lg font-semibold text-red-600 dark:text-red-500">Delete file?</span>}
+        className="border-red-200 dark:border-red-900 max-w-sm"
+      >
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+          Are you sure you want to delete this file? This action cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={closeDeleteModal}
+            disabled={isDeleting}
+            className="flex-1 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
+      </Modal>
     </motion.div>
   )
 }
