@@ -73,9 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggingOut(true)
     await logoutAction()
     localStorage.removeItem('user')
-    // * Clear legacy tokens if they exist (migration)
-    localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
     setTimeout(() => {
       window.location.href = '/'
     }, 500)
@@ -137,12 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // * Session invalid/expired
         localStorage.removeItem('user')
         setUser(null)
-      }
-
-      // * Clear legacy tokens if they exist (migration)
-      if (typeof window !== 'undefined' && localStorage.getItem('token')) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('refreshToken')
       }
 
       setLoading(false)

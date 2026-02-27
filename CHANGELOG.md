@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **App Switcher in User Menu.** Click your profile in the top right and you'll now see a "Ciphera Apps" section. Expand it to quickly jump between Drop, Pulse (analytics), and your Ciphera Account settings. This makes it easier to discover and navigate between Ciphera products without signing in again.
 
+### Security
+
+- **Cleaned up legacy token handling code.** Removed old migration code that was clearing legacy tokens from localStorage. Drop now exclusively uses secure httpOnly cookies for authentication tokens, making your session more secure against XSS attacks. Tokens are never stored in JavaScript-accessible storage.
+
 ---
 
 ## [0.1.0-alpha] - 2026-02-27
