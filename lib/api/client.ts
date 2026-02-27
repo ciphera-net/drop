@@ -1,8 +1,10 @@
 /**
  * HTTP client wrapper for API calls
+ * Includes Request ID propagation for debugging across services
  */
 
 import { authMessageFromStatus, AUTH_ERROR_MESSAGES } from '@ciphera-net/ui'
+import { generateRequestId, getRequestIdHeader, setLastRequestId } from '@/lib/utils/requestId'
 
 /** Request timeout in ms; network errors surface as user-facing "Network error, please try again." */
 const FETCH_TIMEOUT_MS = 30_000
@@ -70,8 +72,13 @@ async function apiRequest<T>(
   const baseUrl = isAuthRequest ? AUTH_API_URL : API_URL
   const url = `${baseUrl}/api/v1${endpoint}`
 
+  // * Generate and store request ID for tracing
+  const requestId = generateRequestId()
+  setLastRequestId(requestId)
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    [getRequestIdHeader()]: requestId,
     ...options.headers,
   }
 
