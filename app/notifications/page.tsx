@@ -1,0 +1,223 @@
+'use client'
+
+/**
+ * Notifications page - Full list of user notifications
+ */
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useAuth } from '@/lib/auth/context'
+import {
+  listNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  type Notification,
+} from '@/lib/api/notifications'
+import { getAuthErrorMessage, Button, ArrowLeftIcon, SpinnerIcon } from '@ciphera-net/ui'
+import { formatTimeAgo, getTypeIcon } from '@/lib/utils/notifications'
+
+const PAGE_SIZE = 50
+
+export default function NotificationsPage() {
+  const { user } = useAuth()
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const fetchPage = async (pageOffset: number, append: boolean) => {
+    if (append) setLoadingMore(true)
+    else setLoading(true)
+    setError(null)
+    try {
+      const res = await listNotifications({ limit: PAGE_SIZE, offset: pageOffset })
+      const list = Array.isArray(res?.notifications) ? res.notifications : []
+      setNotifications((prev) => (append ? [...prev, ...list] : list))
+      setUnreadCount(typeof res?.unread_count === 'number' ? res.unread_count : 0)
+      setHasMore(list.length === PAGE_SIZE)
+    } catch (err) {
+      setError(getAuthErrorMessage(err as Error) || 'Failed to load notifications')
+      setNotifications((prev) => (append ? prev : []))
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!user?.org_id) {
+      setLoading(false)
+      return
+    }
+    fetchPage(0, false)
+  }, [user?.org_id])
+
+  const handleLoadMore = () => {
+    const next = offset + PAGE_SIZE
+    setOffset(next)
+    fetchPage(next, true)
+  }
+
+  const handleMarkRead = async (id: string) => {
+    try {
+      await markNotificationRead(id)
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
+      setUnreadCount((c) => Math.max(0, c - 1))
+    } catch {
+      // Ignore
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead()
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+      setUnreadCount(0)
+    } catch {
+      // Ignore
+    }
+  }
+
+  const handleNotificationClick = (n: Notification) => {
+    if (!n.read) handleMarkRead(n.id)
+  }
+
+  if (!user?.org_id) {
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-2xl mx-auto text-center py-12">
+          <p className="text-neutral-500">Switch to an organization to view notifications.</p>
+          <Link href="/dashboard" className="text-brand-orange hover:underline mt-4 inline-block">
+            Go to dashboard
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to Dashboard
+          </Link>
+          {unreadCount > 0 && (
+            <button
+              onClick={handleMarkAllRead}
+              className="px-4 py-2 text-sm text-brand-orange hover:bg-brand-orange/10 rounded-lg transition-colors"
+            >
+              Mark all read
+            </button>
+          )}
+        </div>
+
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Notifications</h1>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+          Stay updated on your files, shares, and account activity
+        </p>
+
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50"
+              >
+                <div className="flex gap-3">
+                  <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-3/4 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded" />
+                    <div className="h-3 w-1/2 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="p-6 text-center text-red-500 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-200 dark:border-red-800">
+            {error}
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="p-6 text-center text-neutral-500 dark:text-neutral-400 rounded-2xl border border-neutral-200 dark:border-neutral-800">
+            <p>No notifications yet</p>
+            <p className="text-sm mt-2">
+              Notifications will appear when you upload, download, or share files.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {notifications.map((n) => (
+              <div key={n.id}>
+                {n.link_url ? (
+                  <Link
+                    href={n.link_url}
+                    onClick={() => handleNotificationClick(n)}
+                    className={`block p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors ${!n.read ? 'bg-brand-orange/5 dark:bg-brand-orange/10' : ''}`}
+                  >
+                    <div className="flex gap-3">
+                      {getTypeIcon(n.type)}
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-sm ${!n.read ? 'font-medium' : ''} text-neutral-900 dark:text-white`}>
+                          {n.title}
+                        </p>
+                        {n.body && (
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{n.body}</p>
+                        )}
+                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                          {formatTimeAgo(n.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleNotificationClick(n)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleNotificationClick(n)}
+                    className={`block p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer ${!n.read ? 'bg-brand-orange/5 dark:bg-brand-orange/10' : ''}`}
+                  >
+                    <div className="flex gap-3">
+                      {getTypeIcon(n.type)}
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-sm ${!n.read ? 'font-medium' : ''} text-neutral-900 dark:text-white`}>
+                          {n.title}
+                        </p>
+                        {n.body && (
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{n.body}</p>
+                        )}
+                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                          {formatTimeAgo(n.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {hasMore && (
+              <div className="pt-4 text-center">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="px-4 py-2 text-sm text-brand-orange hover:bg-brand-orange/10 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loadingMore && <SpinnerIcon className="w-4 h-4 animate-spin" />}
+                  Load more
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

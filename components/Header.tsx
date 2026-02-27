@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { getUserOrganizations, switchContext } from '@/lib/api/organization'
 import { setSessionAction } from '@/app/actions/auth'
+import NotificationCenter from '@/components/NotificationCenter'
 
 // * Available Ciphera apps for the app switcher
 const CIPHERA_APPS: CipheraApp[] = [
@@ -83,6 +84,7 @@ export default function Header() {
       dashboardHref="/dashboard"
       apps={CIPHERA_APPS}
       currentAppId="drop"
+      rightSideActions={auth.user ? <NotificationCenter /> : null}
     />
   )
 }
