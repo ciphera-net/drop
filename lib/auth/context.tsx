@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import apiRequest from '@/lib/api/client'
-import { LoadingOverlay } from '@ciphera-net/ui'
+import { LoadingOverlay, useSessionSync } from '@ciphera-net/ui'
 import { logoutAction, getSessionAction } from '@/app/actions/auth'
 
 interface UserPreferences {
@@ -73,6 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggingOut(true)
     await logoutAction()
     localStorage.removeItem('user')
+    // * Broadcast logout to other tabs (BroadcastChannel will handle if available)
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      const channel = new BroadcastChannel('ciphera_session')
+      channel.postMessage({ type: 'LOGOUT' })
+      channel.close()
+    }
     setTimeout(() => {
       window.location.href = '/'
     }, 500)
@@ -99,6 +105,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = useCallback(async () => {
     await refresh()
   }, [refresh])
+
+  // * Sync session across browser tabs using BroadcastChannel
+  useSessionSync({
+    onLogout: () => {
+      localStorage.removeItem('user')
+      window.location.href = '/'
+    },
+    onLogin: (userData) => {
+      setUser(userData as User)
+      router.refresh()
+    },
+    onRefresh: () => {
+      refresh()
+    },
+  })
 
   // Initial load
   useEffect(() => {
