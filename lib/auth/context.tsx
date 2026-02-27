@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import apiRequest from '@/lib/api/client'
-import { LoadingOverlay, useSessionSync } from '@ciphera-net/ui'
+import { LoadingOverlay, useSessionSync, SessionExpiryWarning } from '@ciphera-net/ui'
 import { logoutAction, getSessionAction } from '@/app/actions/auth'
 
 interface UserPreferences {
@@ -165,6 +165,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, refresh, refreshSession }}>
       {isLoggingOut && <LoadingOverlay logoSrc="/drop_icon_no_margins.png" title="Drop" />}
+      <SessionExpiryWarning
+        isAuthenticated={!!user}
+        onExtendSession={refresh}
+        onExpired={logout}
+      />
       {children}
     </AuthContext.Provider>
   )
