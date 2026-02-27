@@ -1,9 +1,8 @@
-import Header from '../components/Header'
-import Footer from '../components/Footer'
 import { AuthProvider } from '@/lib/auth/context'
 import { ThemeProviders, Toaster } from '@ciphera-net/ui'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
+import LayoutContent from './LayoutContent'
 import '../styles/globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -30,12 +29,19 @@ export const metadata: Metadata = {
     follow: true,
   },
   manifest: '/manifest.json',
-  themeColor: '#FD5E0F',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Drop',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#FD5E0F',
 }
 
 export default function RootLayout({
@@ -48,11 +54,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50">
         <ThemeProviders>
           <AuthProvider>
-            <Header />
-            <main className="flex-1 pt-24 pb-8">
-              {children}
-            </main>
-            <Footer />
+            <LayoutContent>{children}</LayoutContent>
             <Toaster />
           </AuthProvider>
         </ThemeProviders>

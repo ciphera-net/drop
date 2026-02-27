@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Offline Banner.** When you lose your internet connection while signed in, a yellow banner now appears at the top of the page warning "You are currently offline. Changes may not be saved." This helps you understand why file uploads or other actions might fail. The banner automatically disappears when your connection comes back.
 - **Notification Center.** A bell icon now appears in the header when you're signed in. Click it to see your recent notifications — things like when someone downloads your shared file, when you receive a new file, or when a shared link is accessed. Notifications show timestamps (like "2 hours ago") and unread ones are highlighted in orange. Click "Mark all read" to clear the badge, or "View all" to see your full notification history on a dedicated page.
 - **App Switcher in User Menu.** Click your profile in the top right and you'll now see a "Ciphera Apps" section. Expand it to quickly jump between Drop, Pulse (analytics), and your Ciphera Account settings. This makes it easier to discover and navigate between Ciphera products without signing in again.
 
