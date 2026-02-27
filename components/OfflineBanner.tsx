@@ -4,7 +4,20 @@
  * Offline banner shown when user loses internet connection
  */
 
-import { WifiOffIcon } from '@ciphera-net/ui'
+// Inline SVG for wifi off icon
+function WifiOffIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="2" x2="22" y1="2" y2="22" />
+      <path d="M8.5 16.5a5 5 0 0 1 7 0" />
+      <path d="M2 8.82a15 15 0 0 1 4.17-2.65" />
+      <path d="M22 8.82a15 15 0 0 0-4.17-2.65" />
+      <path d="M6 12a10 10 0 0 1 1.76-2.34" />
+      <path d="M18 12a10 10 0 0 0-1.76-2.34" />
+      <line x1="1" x2="23" y1="16" y2="16" />
+    </svg>
+  )
+}
 
 export function OfflineBanner({ isOnline }: { isOnline: boolean }) {
   if (isOnline) return null

@@ -13,7 +13,7 @@ import {
   markAllNotificationsRead,
   type Notification,
 } from '@/lib/api/notifications'
-import { getAuthErrorMessage, Button, ArrowLeftIcon, SpinnerIcon } from '@ciphera-net/ui'
+import { getAuthErrorMessage, Button, ArrowLeftIcon, Spinner } from '@ciphera-net/ui'
 import { formatTimeAgo, getTypeIcon } from '@/lib/utils/notifications'
 
 const PAGE_SIZE = 50
@@ -210,7 +210,7 @@ export default function NotificationsPage() {
                   disabled={loadingMore}
                   className="px-4 py-2 text-sm text-brand-orange hover:bg-brand-orange/10 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {loadingMore && <SpinnerIcon className="w-4 h-4 animate-spin" />}
+                  {loadingMore && <Spinner className="w-4 h-4" />
                   Load more
                 </button>
               </div>

@@ -3,16 +3,34 @@
  */
 
 import {
-  InfoIcon,
   AlertTriangleIcon,
   CheckCircleIcon,
   DownloadIcon,
-  FileIcon,
-  ClockIcon,
-  ShieldIcon,
+  BoxIcon,
+  LockIcon,
   UserIcon,
-  LinkIcon,
+  Share2Icon,
 } from '@ciphera-net/ui'
+
+// Simple SVG icons for types not in ciphera-ui
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  )
+}
+
+function InfoIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+  )
+}
 
 /**
  * Format a date to relative time (e.g. "2 hours ago", "just now")
@@ -55,13 +73,13 @@ export function getTypeIcon(type: string): JSX.Element {
     case 'file_downloaded':
       return <DownloadIcon className={`${iconClass} ${iconColor}`} />
     case 'file_received':
-      return <FileIcon className={`${iconClass} ${iconColor}`} />
+      return <BoxIcon className={`${iconClass} ${iconColor}`} />
     case 'file_expiring':
       return <ClockIcon className={`${iconClass} ${iconColor}`} />
     case 'share_accessed':
-      return <LinkIcon className={`${iconClass} ${iconColor}`} />
+      return <Share2Icon className={`${iconClass} ${iconColor}`} />
     case 'security_alert':
-      return <ShieldIcon className={`${iconClass} text-red-500`} />
+      return <LockIcon className={`${iconClass} text-red-500`} />
     case 'success':
       return <CheckCircleIcon className={`${iconClass} text-green-500`} />
     case 'warning':
