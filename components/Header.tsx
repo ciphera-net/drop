@@ -9,16 +9,8 @@ import { getUserOrganizations, switchContext } from '@/lib/api/organization'
 import { setSessionAction } from '@/app/actions/auth'
 import NotificationCenter from '@/components/NotificationCenter'
 
-// * Available Ciphera apps for the app switcher
+// * Available Ciphera apps for the app switcher (order: Pulse, Drop, Auth)
 const CIPHERA_APPS: CipheraApp[] = [
-  {
-    id: 'drop',
-    name: 'Drop',
-    description: 'Your current app — Secure file sharing',
-    icon: 'https://ciphera.net/drop_icon_no_margins.png',
-    href: 'https://drop.ciphera.net',
-    isAvailable: false, // * Current app
-  },
   {
     id: 'pulse',
     name: 'Pulse',
@@ -26,6 +18,14 @@ const CIPHERA_APPS: CipheraApp[] = [
     icon: 'https://ciphera.net/pulse_icon_no_margins.png',
     href: 'https://pulse.ciphera.net',
     isAvailable: true,
+  },
+  {
+    id: 'drop',
+    name: 'Drop',
+    description: 'Your current app — Secure file sharing',
+    icon: 'https://ciphera.net/drop_icon_no_margins.png',
+    href: 'https://drop.ciphera.net',
+    isAvailable: false, // * Current app
   },
   {
     id: 'auth',
