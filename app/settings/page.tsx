@@ -1,14 +1,15 @@
-import ProfileSettings from '@/components/settings/ProfileSettings'
+import { Metadata } from 'next'
+import SettingsPageClient from './SettingsPageClient'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Settings - Drop',
-  description: 'Manage your account settings',
+  description: 'Manage your Drop preferences and Ciphera account settings',
 }
 
 export default function SettingsPage() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-8">
-      <ProfileSettings />
+      <SettingsPageClient />
     </div>
   )
 }

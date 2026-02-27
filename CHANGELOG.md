@@ -8,9 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Unified Settings Experience.** The Settings page has been completely redesigned with a clear separation between Drop-specific settings and your Ciphera Account settings. The left sidebar now shows "Drop Settings" (Profile, Notifications, Organization) and "Ciphera Account" sections. A new "Manage Account" panel provides direct links to your Ciphera Account settings for profile, security/2FA, and active sessions — no more confusion about where to find different settings. When you're in an organization, the Organization Settings are now accessible directly from the Settings page with members, billing, and general management all in one place.
 - **Offline Banner.** When you lose your internet connection while signed in, a yellow banner now appears at the top of the page warning "You are currently offline. Changes may not be saved." This helps you understand why file uploads or other actions might fail. The banner automatically disappears when your connection comes back.
 - **Notification Center.** A bell icon now appears in the header when you're signed in. Click it to see your recent notifications — things like when someone downloads your shared file, when you receive a new file, or when a shared link is accessed. Notifications show timestamps (like "2 hours ago") and unread ones are highlighted in orange. Click "Mark all read" to clear the badge, or "View all" to see your full notification history on a dedicated page.
 - **App Switcher in User Menu.** Click your profile in the top right and you'll now see a "Ciphera Apps" section. Expand it to quickly jump between Drop, Pulse (analytics), and your Ciphera Account settings. This makes it easier to discover and navigate between Ciphera products without signing in again.
+
+### Changed
+
+- **App Switcher now shows consistent order.** The Ciphera Apps menu now always displays apps in the same order: Pulse, Drop, Auth — regardless of which app you're currently using. Previously, the current app was shown first, causing the order to change depending on context. This creates a more predictable navigation experience.
 
 ### Security
 
