@@ -1,12 +1,40 @@
 'use client'
 
-import { Header as SharedHeader } from '@ciphera-net/ui'
+import { Header as SharedHeader, type CipheraApp } from '@ciphera-net/ui'
 import { useAuth } from '@/lib/auth/context'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { getUserOrganizations, switchContext } from '@/lib/api/organization'
 import { setSessionAction } from '@/app/actions/auth'
+
+// * Available Ciphera apps for the app switcher
+const CIPHERA_APPS: CipheraApp[] = [
+  {
+    id: 'drop',
+    name: 'Drop',
+    description: 'Your current app — Secure file sharing',
+    icon: '/drop_icon_no_margins.png',
+    href: 'https://drop.ciphera.net',
+    isAvailable: false, // * Current app
+  },
+  {
+    id: 'pulse',
+    name: 'Pulse',
+    description: 'Privacy-first analytics',
+    icon: '/pulse_icon_no_margins.png',
+    href: 'https://pulse.ciphera.net',
+    isAvailable: true,
+  },
+  {
+    id: 'auth',
+    name: 'Ciphera Account',
+    description: 'Manage your account settings',
+    icon: '/auth_icon_no_margins.png',
+    href: 'https://auth.ciphera.net',
+    isAvailable: true,
+  },
+]
 
 export default function Header() {
   const auth = useAuth()
@@ -53,6 +81,8 @@ export default function Header() {
       onCreateOrganization={() => window.location.href = '/dashboard/organizations/new'}
       allowPersonalOrganization={true}
       dashboardHref="/dashboard"
+      apps={CIPHERA_APPS}
+      currentAppId="drop"
     />
   )
 }
