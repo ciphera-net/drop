@@ -35,11 +35,6 @@ const DOWNLOAD_LIMITS = [
   { label: '∞', value: 'unlimited' },
 ]
 
-const NOTIFICATION_OPTIONS = [
-  { key: 'new_file_received', label: 'New File Received', description: 'When someone sends you a file.' },
-  { key: 'file_downloaded', label: 'File Downloaded', description: 'When someone downloads your shared file.' },
-  { key: 'security_alerts', label: 'Security Alerts', description: 'Important security events like new logins.' },
-]
 
 interface Props {
   activeTab?: 'profile' | 'security' | 'preferences'
@@ -208,9 +203,9 @@ export default function ProfileSettings({ activeTab }: Props = {}) {
       refreshUser={refresh}
       logout={logout}
       renderPreferences={renderPreferences}
-      notificationOptions={NOTIFICATION_OPTIONS}
       activeTab={activeTab}
       hideNav={activeTab !== undefined}
+      hideNotifications
     />
   )
 }

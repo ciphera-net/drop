@@ -5,13 +5,14 @@
  * Expandable sidebar navigation with sub-items
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/context'
 import ProfileSettings from '@/components/settings/ProfileSettings'
 import OrganizationSettings from '@/components/settings/OrganizationSettings'
 import TrustedDevicesCard from '@/components/settings/TrustedDevicesCard'
 import SecurityActivityCard from '@/components/settings/SecurityActivityCard'
+import { updateUserPreferences } from '@/lib/api/user'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserIcon,
@@ -47,16 +48,17 @@ function UsersIcon({ className }: { className?: string }) {
 
 type ProfileSubTab = 'profile' | 'security' | 'preferences'
 type OrgSubTab = 'general' | 'members'
+type NotificationSubTab = 'email' | 'center'
 
 type ActiveSelection =
   | { section: 'profile'; subTab: ProfileSubTab }
-  | { section: 'notifications' }
+  | { section: 'notifications'; subTab: NotificationSubTab }
   | { section: 'organization'; subTab: OrgSubTab }
   | { section: 'account' }
   | { section: 'devices' }
   | { section: 'activity' }
 
-type ExpandableSection = 'profile' | 'organization' | 'account'
+type ExpandableSection = 'profile' | 'notifications' | 'organization' | 'account'
 
 // --- Sidebar Components ---
 
@@ -224,6 +226,100 @@ function AccountManagementCard() {
   )
 }
 
+// Email Notification Preferences Card
+const DROP_NOTIFICATION_OPTIONS = [
+  { key: 'new_file_received', label: 'New File Received', description: 'When someone sends you a file.' },
+  { key: 'file_downloaded', label: 'File Downloaded', description: 'When someone downloads your shared file.' },
+  { key: 'security_alerts', label: 'Security Alerts', description: 'Important security events like new logins.' },
+]
+
+function EmailNotificationPreferencesCard() {
+  const { user } = useAuth()
+  const [emailNotifications, setEmailNotifications] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    if (user?.preferences?.email_notifications) {
+      setEmailNotifications(user.preferences.email_notifications)
+    } else {
+      const defaults = DROP_NOTIFICATION_OPTIONS.reduce((acc, option) => ({
+        ...acc,
+        [option.key]: true
+      }), {} as Record<string, boolean>)
+      setEmailNotifications(defaults)
+    }
+  }, [user])
+
+  const handleToggle = async (key: string) => {
+    const newState = {
+      ...emailNotifications,
+      [key]: !emailNotifications[key]
+    }
+    setEmailNotifications(newState)
+    try {
+      await updateUserPreferences({
+        email_notifications: newState as { new_file_received: boolean; file_downloaded: boolean; security_alerts: boolean }
+      })
+    } catch {
+      setEmailNotifications(prev => ({
+        ...prev,
+        [key]: !prev[key]
+      }))
+    }
+  }
+
+  return (
+    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-brand-orange/10">
+          <BellIcon className="w-5 h-5 text-brand-orange" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Email Notifications</h2>
+          <p className="text-sm text-neutral-500">Choose which email notifications you receive</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {DROP_NOTIFICATION_OPTIONS.map((item) => (
+          <div
+            key={item.key}
+            className={`flex items-center justify-between p-4 border rounded-xl transition-all duration-200 ${
+              emailNotifications[item.key]
+                ? 'bg-orange-50 dark:bg-brand-orange/10 border-brand-orange shadow-sm'
+                : 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800'
+            }`}
+          >
+            <div className="space-y-0.5">
+              <span className={`block text-sm font-medium transition-colors duration-200 ${
+                emailNotifications[item.key] ? 'text-brand-orange' : 'text-neutral-900 dark:text-white'
+              }`}>
+                {item.label}
+              </span>
+              <span className={`block text-xs transition-colors duration-200 ${
+                emailNotifications[item.key] ? 'text-brand-orange/80' : 'text-neutral-500 dark:text-neutral-400'
+              }`}>
+                {item.description}
+              </span>
+            </div>
+            <button
+              onClick={() => handleToggle(item.key)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                emailNotifications[item.key] ? 'bg-brand-orange' : 'bg-neutral-200 dark:bg-neutral-700'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  emailNotifications[item.key] ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // Organization Settings Card
 function OrganizationSettingsCard({ activeTab }: { activeTab?: 'general' | 'members' }) {
   const { user } = useAuth()
@@ -297,13 +393,14 @@ function AppSettingsSection() {
           <ProfileSettings activeTab={active.subTab} />
         )
       case 'notifications':
-        return (
+        if (active.subTab === 'email') return <EmailNotificationPreferencesCard />
+        if (active.subTab === 'center') return (
           <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-8 shadow-sm">
             <div className="text-center max-w-md mx-auto">
               <BellIcon className="w-12 h-12 text-neutral-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-2">Notification Preferences</h3>
+              <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-2">Notification Center</h3>
               <p className="text-sm text-neutral-500 mb-4">
-                Configure which notifications you receive and how you want to be notified.
+                View and manage all your notifications in one place.
               </p>
               <Link
                 href="/notifications"
@@ -315,6 +412,7 @@ function AppSettingsSection() {
             </div>
           </div>
         )
+        return null
       case 'organization':
         return <OrganizationSettingsCard activeTab={active.subTab} />
       case 'account':
@@ -372,16 +470,34 @@ function AppSettingsSection() {
               </ExpandableSubItems>
             </div>
 
-            {/* Notifications (flat, no expansion) */}
-            <SectionHeader
-              expanded={false}
-              active={active.section === 'notifications'}
-              onToggle={() => setActive({ section: 'notifications' })}
-              icon={BellIcon}
-              label="Notifications"
-              description="Email and in-app notifications"
-              hasChildren={false}
-            />
+            {/* Notifications (expandable) */}
+            <div>
+              <SectionHeader
+                expanded={expanded.has('notifications')}
+                active={active.section === 'notifications'}
+                onToggle={() => {
+                  toggleSection('notifications')
+                  if (!expanded.has('notifications')) {
+                    selectSubTab({ section: 'notifications', subTab: 'email' })
+                  }
+                }}
+                icon={BellIcon}
+                label="Notifications"
+                description="Email and in-app notifications"
+              />
+              <ExpandableSubItems expanded={expanded.has('notifications')}>
+                <SubItem
+                  active={active.section === 'notifications' && active.subTab === 'email'}
+                  onClick={() => selectSubTab({ section: 'notifications', subTab: 'email' })}
+                  label="Email Preferences"
+                />
+                <SubItem
+                  active={active.section === 'notifications' && active.subTab === 'center'}
+                  onClick={() => selectSubTab({ section: 'notifications', subTab: 'center' })}
+                  label="Notification Center"
+                />
+              </ExpandableSubItems>
+            </div>
 
             {/* Organization (expandable) */}
             <div>
