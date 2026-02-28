@@ -50,9 +50,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const router = useRouter()
 
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (res.ok) {
+        localStorage.setItem('ciphera_token_refreshed_at', Date.now().toString())
+      }
+      return res.ok
+    } catch {
+      return false
+    }
+  }, [])
+
   const login = (userData: User) => {
     // * We store user profile in localStorage for optimistic UI, but NOT the token
     localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem('ciphera_token_refreshed_at', Date.now().toString())
     setUser(userData)
     router.refresh()
     // * Fetch full profile (including display_name) so header shows correct name without page refresh
@@ -75,6 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggingOut(true)
     await logoutAction()
     localStorage.removeItem('user')
+    localStorage.removeItem('ciphera_token_refreshed_at')
+    localStorage.removeItem('ciphera_last_activity')
     // * Broadcast logout to other tabs (BroadcastChannel will handle if available)
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       const channel = new BroadcastChannel('ciphera_session')
@@ -144,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session) {
         setUser(session)
         localStorage.setItem('user', JSON.stringify(session))
+        localStorage.setItem('ciphera_token_refreshed_at', Date.now().toString())
         // * Fetch full profile (including display_name) from API; preserve org_id/role from session
         try {
           const userData = await apiRequest<User>('/auth/user/me')
@@ -169,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {isLoggingOut && <LoadingOverlay logoSrc="/drop_icon_no_margins.png" title="Drop" />}
       <SessionExpiryWarning
         isAuthenticated={!!user}
-        onExtendSession={refresh}
+        onRefreshToken={refreshToken}
         onExpired={logout}
       />
       {children}
