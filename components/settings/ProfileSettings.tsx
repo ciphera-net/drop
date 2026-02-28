@@ -41,7 +41,11 @@ const NOTIFICATION_OPTIONS = [
   { key: 'security_alerts', label: 'Security Alerts', description: 'Important security events like new logins.' },
 ]
 
-export default function ProfileSettings() {
+interface Props {
+  activeTab?: 'profile' | 'security' | 'preferences'
+}
+
+export default function ProfileSettings({ activeTab }: Props = {}) {
   const { user, refresh, logout } = useAuth()
   
   // Preferences State
@@ -205,6 +209,8 @@ export default function ProfileSettings() {
       logout={logout}
       renderPreferences={renderPreferences}
       notificationOptions={NOTIFICATION_OPTIONS}
+      activeTab={activeTab}
+      hideNav={activeTab !== undefined}
     />
   )
 }

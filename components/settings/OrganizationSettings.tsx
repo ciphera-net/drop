@@ -28,10 +28,21 @@ import {
 } from '@ciphera-net/ui'
 import { Button, Input } from '@ciphera-net/ui'
 
-export default function OrganizationSettings() {
+interface OrganizationSettingsProps {
+  activeTab?: 'general' | 'members'
+  hideNav?: boolean
+}
+
+export default function OrganizationSettings({ activeTab: externalTab, hideNav }: OrganizationSettingsProps = {}) {
   const { user } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'general' | 'members'>('general')
+  const [internalTab, setInternalTab] = useState<'general' | 'members'>(externalTab ?? 'general')
+  const currentTab = externalTab ?? internalTab
+  const handleTabChange = (tab: 'general' | 'members') => {
+    if (externalTab === undefined) {
+      setInternalTab(tab)
+    }
+  }
 
   const [showDeletePrompt, setShowDeletePrompt] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
@@ -184,52 +195,9 @@ export default function OrganizationSettings() {
   // We can find the current user's membership entry which has org name.
   const currentOrgName = members.find(m => m.user_id === user?.id)?.organization_name || 'Organization'
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Organization Settings</h1>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-          Manage your organization and members.
-        </p>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar Navigation */}
-        <nav className="w-full md:w-64 flex-shrink-0 space-y-1">
-          <button
-            onClick={() => setActiveTab('general')}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
-              activeTab === 'general'
-                ? 'bg-brand-orange/10 text-brand-orange'
-                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-            }`}
-          >
-            <BoxIcon className="w-5 h-5" />
-            General
-          </button>
-          <button
-            onClick={() => setActiveTab('members')}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
-              activeTab === 'members'
-                ? 'bg-brand-orange/10 text-brand-orange'
-                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-            }`}
-          >
-            <UserIcon className="w-5 h-5" />
-            Members
-          </button>
-        </nav>
-
-        {/* Content Area */}
-        <div className="flex-1 relative">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-sm"
-          >
-            {activeTab === 'general' && (
+  const contentPanel = (
+    <>
+            {currentTab === 'general' && (
               <div className="space-y-12">
                  <div>
                     <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-1">General Information</h2>
@@ -329,7 +297,7 @@ export default function OrganizationSettings() {
               </div>
             )}
 
-            {activeTab === 'members' && (
+            {currentTab === 'members' && (
               <div className="space-y-12">
                 {/* Invite Section */}
                 <div>
@@ -446,11 +414,10 @@ export default function OrganizationSettings() {
                 )}
               </div>
             )}
-          </motion.div>
-        </div>
-      </div>
+    </>
+  )
 
-      {/* Delete Confirmation Modal */}
+  const deleteModal = (
       <AnimatePresence>
         {showDeletePrompt && (
           <motion.div
@@ -525,6 +492,68 @@ export default function OrganizationSettings() {
           </motion.div>
         )}
       </AnimatePresence>
+  )
+
+  if (hideNav) {
+    return (
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-sm">
+        {contentPanel}
+        {deleteModal}
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Organization Settings</h1>
+        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+          Manage your organization and members.
+        </p>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Sidebar Navigation */}
+        <nav className="w-full md:w-64 flex-shrink-0 space-y-1">
+          <button
+            onClick={() => handleTabChange('general')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+              currentTab === 'general'
+                ? 'bg-brand-orange/10 text-brand-orange'
+                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+            }`}
+          >
+            <BoxIcon className="w-5 h-5" />
+            General
+          </button>
+          <button
+            onClick={() => handleTabChange('members')}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+              currentTab === 'members'
+                ? 'bg-brand-orange/10 text-brand-orange'
+                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+            }`}
+          >
+            <UserIcon className="w-5 h-5" />
+            Members
+          </button>
+        </nav>
+
+        {/* Content Area */}
+        <div className="flex-1 relative">
+          <motion.div
+            key={currentTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-sm"
+          >
+            {contentPanel}
+          </motion.div>
+        </div>
+      </div>
+
+      {deleteModal}
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 /**
  * Unified Settings Experience for Drop
- * Clear separation between App Settings and Account Settings
+ * Expandable sidebar navigation with sub-items
  */
 
 import { useState } from 'react'
@@ -10,13 +10,14 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth/context'
 import ProfileSettings from '@/components/settings/ProfileSettings'
 import OrganizationSettings from '@/components/settings/OrganizationSettings'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserIcon,
   LockIcon,
   BoxIcon,
   ChevronRightIcon,
+  ChevronDownIcon,
   ExternalLinkIcon,
-  AlertTriangleIcon,
 } from '@ciphera-net/ui'
 
 // Inline SVG icons not available in ciphera-ui
@@ -40,49 +41,116 @@ function UsersIcon({ className }: { className?: string }) {
   )
 }
 
-type SettingsTab = 'profile' | 'notifications' | 'organization' | 'account'
+// --- Types ---
 
-// Navigation item component
-function NavItem({
+type ProfileSubTab = 'profile' | 'security' | 'preferences'
+type OrgSubTab = 'general' | 'members'
+
+type ActiveSelection =
+  | { section: 'profile'; subTab: ProfileSubTab }
+  | { section: 'notifications' }
+  | { section: 'organization'; subTab: OrgSubTab }
+  | { section: 'account' }
+
+type ExpandableSection = 'profile' | 'organization' | 'account'
+
+// --- Sidebar Components ---
+
+function SectionHeader({
+  expanded,
   active,
-  onClick,
+  onToggle,
   icon: Icon,
   label,
   description,
-  external = false,
+  hasChildren = true,
 }: {
+  expanded: boolean
   active: boolean
-  onClick: () => void
+  onToggle: () => void
   icon: React.ElementType
   label: string
   description?: string
-  external?: boolean
+  hasChildren?: boolean
 }) {
   return (
     <button
-      onClick={onClick}
+      onClick={onToggle}
       className={`w-full flex items-start gap-3 px-4 py-3 text-left rounded-xl transition-all duration-200 ${
         active
-          ? 'bg-brand-orange/10 text-brand-orange ring-1 ring-brand-orange/20'
+          ? 'bg-brand-orange/10 text-brand-orange'
           : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
       }`}
     >
       <Icon className="w-5 h-5 mt-0.5 shrink-0" />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{label}</span>
-          {external && <ExternalLinkIcon className="w-3.5 h-3.5 opacity-60" />}
-        </div>
+        <span className="font-medium">{label}</span>
         {description && (
           <p className={`text-xs mt-0.5 ${active ? 'text-brand-orange/70' : 'text-neutral-500'}`}>
             {description}
           </p>
         )}
       </div>
-      <ChevronRightIcon className={`w-4 h-4 shrink-0 transition-transform ${active ? 'rotate-90' : ''}`} />
+      {hasChildren ? (
+        <ChevronDownIcon
+          className={`w-4 h-4 shrink-0 mt-1 transition-transform duration-200 ${
+            expanded ? '' : '-rotate-90'
+          }`}
+        />
+      ) : (
+        <ChevronRightIcon className={`w-4 h-4 shrink-0 mt-1 transition-transform ${active ? 'rotate-90' : ''}`} />
+      )}
     </button>
   )
 }
+
+function SubItem({
+  active,
+  onClick,
+  label,
+  external = false,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+  external?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-2.5 pl-12 pr-4 py-2 text-sm text-left rounded-lg transition-all duration-150 ${
+        active
+          ? 'text-brand-orange font-medium bg-brand-orange/5'
+          : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
+      }`}
+    >
+      <span className="flex-1">{label}</span>
+      {external && <ExternalLinkIcon className="w-3 h-3 opacity-60" />}
+    </button>
+  )
+}
+
+function ExpandableSubItems({ expanded, children }: { expanded: boolean; children: React.ReactNode }) {
+  return (
+    <AnimatePresence initial={false}>
+      {expanded && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
+          className="overflow-hidden"
+        >
+          <div className="py-1 space-y-0.5">
+            {children}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// --- Content Components ---
 
 // Account Management Card - Links to Auth
 function AccountManagementCard() {
@@ -153,7 +221,7 @@ function AccountManagementCard() {
 }
 
 // Organization Settings Card
-function OrganizationSettingsCard() {
+function OrganizationSettingsCard({ activeTab }: { activeTab?: 'general' | 'members' }) {
   const { user } = useAuth()
   const orgId = user?.org_id
 
@@ -180,13 +248,14 @@ function OrganizationSettingsCard() {
     )
   }
 
-  // Render the full OrganizationSettings component when in org context
-  return <OrganizationSettings />
+  return <OrganizationSettings activeTab={activeTab} hideNav />
 }
 
-// App Settings Section
+// --- Main Settings Section ---
+
 function AppSettingsSection() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
+  const [active, setActive] = useState<ActiveSelection>({ section: 'profile', subTab: 'profile' })
+  const [expanded, setExpanded] = useState<Set<ExpandableSection>>(new Set(['profile']))
   const { user } = useAuth()
 
   if (!user) {
@@ -197,26 +266,31 @@ function AppSettingsSection() {
     )
   }
 
+  const toggleSection = (section: ExpandableSection) => {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(section)) {
+        next.delete(section)
+      } else {
+        next.add(section)
+      }
+      return next
+    })
+  }
+
+  const selectSubTab = (selection: ActiveSelection) => {
+    setActive(selection)
+    // Auto-expand the section if not already expanded
+    if ('subTab' in selection) {
+      setExpanded(prev => new Set(prev).add(selection.section as ExpandableSection))
+    }
+  }
+
   const renderContent = () => {
-    switch (activeTab) {
+    switch (active.section) {
       case 'profile':
         return (
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-brand-orange/10">
-                  <UserIcon className="w-5 h-5 text-brand-orange" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Profile & Preferences</h2>
-                  <p className="text-sm text-neutral-500">Manage your profile and default sharing settings</p>
-                </div>
-              </div>
-            </div>
-            <div className="p-6">
-              <ProfileSettings />
-            </div>
-          </div>
+          <ProfileSettings activeTab={active.subTab} />
         )
       case 'notifications':
         return (
@@ -238,7 +312,7 @@ function AppSettingsSection() {
           </div>
         )
       case 'organization':
-        return <OrganizationSettingsCard />
+        return <OrganizationSettingsCard activeTab={active.subTab} />
       case 'account':
         return <AccountManagementCard />
       default:
@@ -250,49 +324,128 @@ function AppSettingsSection() {
     <div className="flex flex-col lg:flex-row gap-8">
       {/* Sidebar Navigation */}
       <nav className="w-full lg:w-72 flex-shrink-0 space-y-6">
-        {/* App Settings Section */}
+        {/* Drop Settings Section */}
         <div>
           <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3 px-4">
             Drop Settings
           </h3>
           <div className="space-y-1">
-            <NavItem
-              active={activeTab === 'profile'}
-              onClick={() => setActiveTab('profile')}
-              icon={UserIcon}
-              label="Profile & Preferences"
-              description="Your profile and sharing defaults"
-            />
-            <NavItem
-              active={activeTab === 'notifications'}
-              onClick={() => setActiveTab('notifications')}
+            {/* Profile & Preferences (expandable) */}
+            <div>
+              <SectionHeader
+                expanded={expanded.has('profile')}
+                active={active.section === 'profile'}
+                onToggle={() => {
+                  toggleSection('profile')
+                  if (!expanded.has('profile')) {
+                    selectSubTab({ section: 'profile', subTab: 'profile' })
+                  }
+                }}
+                icon={UserIcon}
+                label="Profile & Preferences"
+                description="Your profile and sharing defaults"
+              />
+              <ExpandableSubItems expanded={expanded.has('profile')}>
+                <SubItem
+                  active={active.section === 'profile' && active.subTab === 'profile'}
+                  onClick={() => selectSubTab({ section: 'profile', subTab: 'profile' })}
+                  label="Profile"
+                />
+                <SubItem
+                  active={active.section === 'profile' && active.subTab === 'security'}
+                  onClick={() => selectSubTab({ section: 'profile', subTab: 'security' })}
+                  label="Security"
+                />
+                <SubItem
+                  active={active.section === 'profile' && active.subTab === 'preferences'}
+                  onClick={() => selectSubTab({ section: 'profile', subTab: 'preferences' })}
+                  label="Preferences"
+                />
+              </ExpandableSubItems>
+            </div>
+
+            {/* Notifications (flat, no expansion) */}
+            <SectionHeader
+              expanded={false}
+              active={active.section === 'notifications'}
+              onToggle={() => setActive({ section: 'notifications' })}
               icon={BellIcon}
               label="Notifications"
               description="Email and in-app notifications"
+              hasChildren={false}
             />
-            <NavItem
-              active={activeTab === 'organization'}
-              onClick={() => setActiveTab('organization')}
-              icon={UsersIcon}
-              label="Organization"
-              description="Team management and billing"
-            />
+
+            {/* Organization (expandable) */}
+            <div>
+              <SectionHeader
+                expanded={expanded.has('organization')}
+                active={active.section === 'organization'}
+                onToggle={() => {
+                  toggleSection('organization')
+                  if (!expanded.has('organization')) {
+                    selectSubTab({ section: 'organization', subTab: 'general' })
+                  }
+                }}
+                icon={UsersIcon}
+                label="Organization"
+                description="Team management and billing"
+              />
+              <ExpandableSubItems expanded={expanded.has('organization')}>
+                <SubItem
+                  active={active.section === 'organization' && active.subTab === 'general'}
+                  onClick={() => selectSubTab({ section: 'organization', subTab: 'general' })}
+                  label="General"
+                />
+                <SubItem
+                  active={active.section === 'organization' && active.subTab === 'members'}
+                  onClick={() => selectSubTab({ section: 'organization', subTab: 'members' })}
+                  label="Members"
+                />
+              </ExpandableSubItems>
+            </div>
           </div>
         </div>
 
-        {/* Account Section */}
+        {/* Ciphera Account Section */}
         <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
           <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3 px-4">
             Ciphera Account
           </h3>
-          <NavItem
-            active={activeTab === 'account'}
-            onClick={() => setActiveTab('account')}
-            icon={LockIcon}
-            label="Manage Account"
-            description="Security, 2FA, and sessions"
-            external
-          />
+          <div>
+            <SectionHeader
+              expanded={expanded.has('account')}
+              active={active.section === 'account'}
+              onToggle={() => {
+                toggleSection('account')
+                if (!expanded.has('account')) {
+                  setActive({ section: 'account' })
+                }
+              }}
+              icon={LockIcon}
+              label="Manage Account"
+              description="Security, 2FA, and sessions"
+            />
+            <ExpandableSubItems expanded={expanded.has('account')}>
+              <SubItem
+                active={false}
+                onClick={() => window.open('https://auth.ciphera.net/settings', '_blank')}
+                label="Profile & Personal Info"
+                external
+              />
+              <SubItem
+                active={false}
+                onClick={() => window.open('https://auth.ciphera.net/settings?tab=security', '_blank')}
+                label="Security & 2FA"
+                external
+              />
+              <SubItem
+                active={false}
+                onClick={() => window.open('https://auth.ciphera.net/settings?tab=sessions', '_blank')}
+                label="Active Sessions"
+                external
+              />
+            </ExpandableSubItems>
+          </div>
         </div>
       </nav>
 
