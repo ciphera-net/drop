@@ -444,6 +444,18 @@ function AppSettingsSection() {
                 label="Active Sessions"
                 external
               />
+              <SubItem
+                active={false}
+                onClick={() => window.open('https://auth.ciphera.net/devices', '_blank')}
+                label="Trusted Devices"
+                external
+              />
+              <SubItem
+                active={false}
+                onClick={() => window.open('https://auth.ciphera.net/activity', '_blank')}
+                label="Security Activity"
+                external
+              />
             </ExpandableSubItems>
           </div>
         </div>
