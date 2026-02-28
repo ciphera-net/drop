@@ -48,7 +48,7 @@ function UsersIcon({ className }: { className?: string }) {
 
 type ProfileSubTab = 'profile' | 'security' | 'preferences'
 type OrgSubTab = 'general' | 'members'
-type NotificationSubTab = 'email' | 'center'
+type NotificationSubTab = 'email' | 'security' | 'center'
 
 type ActiveSelection =
   | { section: 'profile'; subTab: ProfileSubTab }
@@ -226,11 +226,10 @@ function AccountManagementCard() {
   )
 }
 
-// Email Notification Preferences Card
+// Email Notification Preferences Card (file-specific toggles only)
 const DROP_NOTIFICATION_OPTIONS = [
   { key: 'new_file_received', label: 'New File Received', description: 'When someone sends you a file.' },
   { key: 'file_downloaded', label: 'File Downloaded', description: 'When someone downloads your shared file.' },
-  { key: 'security_alerts', label: 'Security Alerts', description: 'Important security events like new logins.' },
 ]
 
 function EmailNotificationPreferencesCard() {
@@ -257,7 +256,7 @@ function EmailNotificationPreferencesCard() {
     setEmailNotifications(newState)
     try {
       await updateUserPreferences({
-        email_notifications: newState as { new_file_received: boolean; file_downloaded: boolean; security_alerts: boolean }
+        email_notifications: newState as { new_file_received: boolean; file_downloaded: boolean; login_alerts: boolean; password_alerts: boolean; two_factor_alerts: boolean }
       })
     } catch {
       setEmailNotifications(prev => ({
@@ -281,6 +280,100 @@ function EmailNotificationPreferencesCard() {
 
       <div className="space-y-4">
         {DROP_NOTIFICATION_OPTIONS.map((item) => (
+          <div
+            key={item.key}
+            className={`flex items-center justify-between p-4 border rounded-xl transition-all duration-200 ${
+              emailNotifications[item.key]
+                ? 'bg-orange-50 dark:bg-brand-orange/10 border-brand-orange shadow-sm'
+                : 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800'
+            }`}
+          >
+            <div className="space-y-0.5">
+              <span className={`block text-sm font-medium transition-colors duration-200 ${
+                emailNotifications[item.key] ? 'text-brand-orange' : 'text-neutral-900 dark:text-white'
+              }`}>
+                {item.label}
+              </span>
+              <span className={`block text-xs transition-colors duration-200 ${
+                emailNotifications[item.key] ? 'text-brand-orange/80' : 'text-neutral-500 dark:text-neutral-400'
+              }`}>
+                {item.description}
+              </span>
+            </div>
+            <button
+              onClick={() => handleToggle(item.key)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                emailNotifications[item.key] ? 'bg-brand-orange' : 'bg-neutral-200 dark:bg-neutral-700'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  emailNotifications[item.key] ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Security Alerts Card (granular security toggles)
+const SECURITY_ALERT_OPTIONS = [
+  { key: 'login_alerts', label: 'Login Activity', description: 'New device sign-ins and suspicious login attempts.' },
+  { key: 'password_alerts', label: 'Password Changes', description: 'Password changes and session revocations.' },
+  { key: 'two_factor_alerts', label: 'Two-Factor Authentication', description: '2FA enabled/disabled and recovery code changes.' },
+]
+
+function SecurityAlertsCard() {
+  const { user } = useAuth()
+  const [emailNotifications, setEmailNotifications] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    if (user?.preferences?.email_notifications) {
+      setEmailNotifications(user.preferences.email_notifications)
+    } else {
+      const defaults = SECURITY_ALERT_OPTIONS.reduce((acc, option) => ({
+        ...acc,
+        [option.key]: true
+      }), {} as Record<string, boolean>)
+      setEmailNotifications(defaults)
+    }
+  }, [user])
+
+  const handleToggle = async (key: string) => {
+    const newState = {
+      ...emailNotifications,
+      [key]: !emailNotifications[key]
+    }
+    setEmailNotifications(newState)
+    try {
+      await updateUserPreferences({
+        email_notifications: newState as { new_file_received: boolean; file_downloaded: boolean; login_alerts: boolean; password_alerts: boolean; two_factor_alerts: boolean }
+      })
+    } catch {
+      setEmailNotifications(prev => ({
+        ...prev,
+        [key]: !prev[key]
+      }))
+    }
+  }
+
+  return (
+    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-brand-orange/10">
+          <BellIcon className="w-5 h-5 text-brand-orange" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Security Alerts</h2>
+          <p className="text-sm text-neutral-500">Choose which security events trigger email alerts</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {SECURITY_ALERT_OPTIONS.map((item) => (
           <div
             key={item.key}
             className={`flex items-center justify-between p-4 border rounded-xl transition-all duration-200 ${
@@ -394,6 +487,7 @@ function AppSettingsSection() {
         )
       case 'notifications':
         if (active.subTab === 'email') return <EmailNotificationPreferencesCard />
+        if (active.subTab === 'security') return <SecurityAlertsCard />
         if (active.subTab === 'center') return (
           <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-8 shadow-sm">
             <div className="text-center max-w-md mx-auto">
@@ -490,6 +584,11 @@ function AppSettingsSection() {
                   active={active.section === 'notifications' && active.subTab === 'email'}
                   onClick={() => selectSubTab({ section: 'notifications', subTab: 'email' })}
                   label="Email Preferences"
+                />
+                <SubItem
+                  active={active.section === 'notifications' && active.subTab === 'security'}
+                  onClick={() => selectSubTab({ section: 'notifications', subTab: 'security' })}
+                  label="Security Alerts"
                 />
                 <SubItem
                   active={active.section === 'notifications' && active.subTab === 'center'}
