@@ -10,6 +10,8 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth/context'
 import ProfileSettings from '@/components/settings/ProfileSettings'
 import OrganizationSettings from '@/components/settings/OrganizationSettings'
+import TrustedDevicesCard from '@/components/settings/TrustedDevicesCard'
+import SecurityActivityCard from '@/components/settings/SecurityActivityCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   UserIcon,
@@ -51,6 +53,8 @@ type ActiveSelection =
   | { section: 'notifications' }
   | { section: 'organization'; subTab: OrgSubTab }
   | { section: 'account' }
+  | { section: 'devices' }
+  | { section: 'activity' }
 
 type ExpandableSection = 'profile' | 'organization' | 'account'
 
@@ -315,6 +319,10 @@ function AppSettingsSection() {
         return <OrganizationSettingsCard activeTab={active.subTab} />
       case 'account':
         return <AccountManagementCard />
+      case 'devices':
+        return <TrustedDevicesCard />
+      case 'activity':
+        return <SecurityActivityCard />
       default:
         return null
     }
@@ -445,16 +453,14 @@ function AppSettingsSection() {
                 external
               />
               <SubItem
-                active={false}
-                onClick={() => window.open('https://auth.ciphera.net/devices', '_blank')}
+                active={active.section === 'devices'}
+                onClick={() => setActive({ section: 'devices' })}
                 label="Trusted Devices"
-                external
               />
               <SubItem
-                active={false}
-                onClick={() => window.open('https://auth.ciphera.net/activity', '_blank')}
+                active={active.section === 'activity'}
+                onClick={() => setActive({ section: 'activity' })}
                 label="Security Activity"
-                external
               />
             </ExpandableSubItems>
           </div>
