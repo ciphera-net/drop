@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { getUserOrganizations, switchContext } from '@/lib/api/organization'
 import { setSessionAction } from '@/app/actions/auth'
 import NotificationCenter from '@/components/NotificationCenter'
+import { useSettingsModal } from '@/lib/settings-modal-context'
 
 // * Available Ciphera apps for the app switcher (order: Pulse, Drop, Auth)
 const CIPHERA_APPS: CipheraApp[] = [
@@ -40,6 +41,7 @@ const CIPHERA_APPS: CipheraApp[] = [
 export default function Header() {
   const auth = useAuth()
   const router = useRouter()
+  const { openSettings } = useSettingsModal()
   const [orgs, setOrgs] = useState<any[]>([])
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export default function Header() {
       dashboardHref="/dashboard"
       apps={CIPHERA_APPS}
       currentAppId="drop"
+      onOpenSettings={openSettings}
       rightSideActions={auth.user ? <NotificationCenter /> : null}
     />
   )

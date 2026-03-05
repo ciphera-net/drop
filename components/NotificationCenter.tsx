@@ -10,6 +10,7 @@ import { listNotifications, markNotificationRead, markAllNotificationsRead, type
 import { getAuthErrorMessage } from '@ciphera-net/ui'
 import { formatTimeAgo, getTypeIcon } from '@/lib/utils/notifications'
 import { SettingsIcon } from '@ciphera-net/ui'
+import { useSettingsModal } from '@/lib/settings-modal-context'
 
 // Bell icon (simple SVG)
 function BellIcon({ className }: { className?: string }) {
@@ -43,6 +44,7 @@ export default function NotificationCenter() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { openSettings } = useSettingsModal()
 
   const fetchUnreadCount = async () => {
     try {
@@ -262,14 +264,16 @@ export default function NotificationCenter() {
             >
               View all
             </Link>
-            <Link
-              href="/settings"
-              onClick={() => setOpen(false)}
+            <button
+              onClick={() => {
+                setOpen(false)
+                openSettings()
+              }}
               className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 hover:text-brand-orange dark:hover:text-brand-orange transition-colors"
             >
               <SettingsIcon className="w-4 h-4" aria-hidden="true" />
               Manage settings
-            </Link>
+            </button>
           </div>
         </div>
       )}

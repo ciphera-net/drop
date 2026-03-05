@@ -9,6 +9,8 @@ import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { SettingsModalProvider } from '@/lib/settings-modal-context'
+import SettingsModalWrapper from '@/components/settings/SettingsModalWrapper'
 
 export default function LayoutContent({
   children,
@@ -24,7 +26,7 @@ export default function LayoutContent({
   const mainTopPaddingRem = barHeightRem + headerHeightRem
 
   return (
-    <>
+    <SettingsModalProvider>
       {auth.user && <OfflineBanner isOnline={isOnline} />}
       <Header />
       <main
@@ -34,6 +36,7 @@ export default function LayoutContent({
         {children}
       </main>
       <Footer />
-    </>
+      <SettingsModalWrapper />
+    </SettingsModalProvider>
   )
 }
