@@ -179,19 +179,17 @@ export default function SettingsModalWrapper() {
     {
       id: 'drop',
       label: 'Drop Settings',
-      description: 'Profile and sharing defaults',
       icon: UserIcon,
       defaultExpanded: true,
       items: [
-        { id: 'profile', label: 'Profile', content: <ProfileSettings activeTab="profile" /> },
-        { id: 'security', label: 'Security', content: <ProfileSettings activeTab="security" /> },
-        { id: 'preferences', label: 'Preferences', content: <ProfileSettings activeTab="preferences" /> },
+        { id: 'profile', label: 'Profile', content: <ProfileSettings activeTab="profile" borderless /> },
+        { id: 'security', label: 'Security', content: <ProfileSettings activeTab="security" borderless /> },
+        { id: 'preferences', label: 'Preferences', content: <ProfileSettings activeTab="preferences" borderless /> },
       ],
     },
     {
       id: 'security',
       label: 'Security',
-      description: 'Devices and activity',
       icon: LockIcon,
       items: [
         { id: 'devices', label: 'Trusted Devices', content: <TrustedDevicesCard /> },
@@ -201,7 +199,6 @@ export default function SettingsModalWrapper() {
     {
       id: 'notifications',
       label: 'Notifications',
-      description: 'Email and in-app notifications',
       icon: BellIcon,
       items: [
         { id: 'email', label: 'Email Preferences', content: <EmailNotificationPreferencesCard /> },
@@ -212,7 +209,6 @@ export default function SettingsModalWrapper() {
     {
       id: 'organization',
       label: 'Organization',
-      description: 'Team management and billing',
       icon: UsersIcon,
       items: [
         { id: 'org-general', label: 'General', content: <OrganizationSettingsCard activeTab="general" /> },

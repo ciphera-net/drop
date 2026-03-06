@@ -38,9 +38,10 @@ const DOWNLOAD_LIMITS = [
 
 interface Props {
   activeTab?: 'profile' | 'security' | 'preferences'
+  borderless?: boolean
 }
 
-export default function ProfileSettings({ activeTab }: Props = {}) {
+export default function ProfileSettings({ activeTab, borderless }: Props = {}) {
   const { user, refresh, logout } = useAuth()
   
   // Preferences State
@@ -206,6 +207,7 @@ export default function ProfileSettings({ activeTab }: Props = {}) {
       activeTab={activeTab}
       hideNav={activeTab !== undefined}
       hideNotifications
+      borderless={borderless}
     />
   )
 }
