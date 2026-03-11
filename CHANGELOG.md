@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Improved
+
+- **Smarter bot protection during uploads.** The security check before uploading files now uses an action-specific token tied to the "upload" action, so it can't be reused on other pages. The captcha is also automatically disabled while an upload is in progress, preventing accidental double-submits.
+
 ### Added
 
 - **Request ID tracing for debugging.** All API requests now include a unique Request ID header (`X-Request-ID`) that helps trace requests across frontend and backend services. When errors occur, the Request ID is included in the response, making it easy to find the exact request in server logs for debugging. This helps the support team quickly diagnose issues when users report problems.

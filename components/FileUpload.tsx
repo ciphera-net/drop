@@ -801,9 +801,11 @@ export default function FileUpload({ onUploadComplete, requestId, requestKey }: 
       {/* Captcha */}
       {!user && files.length > 0 && (
         <div className="pt-2">
-          <Captcha 
-            onVerify={handleCaptchaVerify} 
+          <Captcha
+            onVerify={handleCaptchaVerify}
             className={uploading ? 'opacity-50 pointer-events-none' : ''}
+            action="upload"
+            disabled={uploading}
           />
         </div>
       )}
