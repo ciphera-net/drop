@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@ciphera-net/ui": "^0.2.5",
+    "@ciphera-net/ui": "^0.2.6",
     "@simplewebauthn/browser": "^13.2.2",
     "axios": "^1.13.2",
     "exifr": "^7.1.3",
